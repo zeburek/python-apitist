@@ -7,10 +7,35 @@ Brand new way to test your API
 Actually project is not published on PyPi,
 so the only way:
 ```bash
-pip install git+https://github.com/zeburek/python-apitist
+pip install python-apitist
 ```
 
-# Usage of Hooks
+# Default hooks
+
+- RequestDebugLoggingHook
+- RequestInfoLoggingHook
+- PrepRequestDebugLoggingHook
+- PrepRequestInfoLoggingHook
+- ResponseDebugLoggingHook
+- ResponseInfoLoggingHook
+
+## Example usage
+
+```python
+from apitist.hooks import PrepRequestInfoLoggingHook, ResponseInfoLoggingHook
+from apitist.requests import session
+
+
+s = session()
+PrepRequestInfoLoggingHook.formatter = "Best formatter {req.method} {req.url}"
+
+s.add_prep_request_hook(PrepRequestInfoLoggingHook)
+s.add_response_hook(ResponseInfoLoggingHook)
+
+s.post("https://httpbin.org/post", params={"q": "test"})
+```
+
+# Custom Hooks
 
 ```python
 from requests import Request, PreparedRequest, Response
