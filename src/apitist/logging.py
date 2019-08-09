@@ -48,7 +48,8 @@ def setup_logging(log_level):
         pass
 
     logger = logging.getLogger(apitist.dist_name)
-    return logger.setLevel(log_level)
+    logger.setLevel(log_level)
+    return logger
 
 
 _logger = setup_logging(LOG_LEVEL)
