@@ -69,3 +69,57 @@ s.add_response_hook(RespHook)
 
 s.get("https://ya.ru", params={"q": "test"})
 ```
+
+# Working with constructor
+
+```python
+import attr
+import typing
+
+from apitist.constructor import converter
+from apitist.hooks import RequestConverterHook, ResponseConverterHook
+from apitist.requests import session
+
+
+class ExampleType:
+    test = None
+
+@attr.s
+class ExampleStructure:
+    test: ExampleType = attr.ib()
+
+@attr.s
+class TestResponse:
+    args: typing.Dict = attr.ib()
+    data: str = attr.ib()
+    files: typing.Dict = attr.ib()
+    form: typing.Dict = attr.ib()
+    headers: typing.Dict = attr.ib()
+    json: ExampleStructure = attr.ib()
+    origin: str = attr.ib()
+    url: str = attr.ib()
+
+s = session()
+s.add_hook(RequestConverterHook)
+s.add_hook(ResponseConverterHook)
+
+def structure_example_type(data, type_):
+    example = ExampleType()
+    example.test = data
+    return example
+
+def unstructure_example_type(data):
+    return data.test
+
+converter.register_hooks(
+    ExampleType, structure_example_type, unstructure_example_type
+)
+
+t = ExampleType()
+t.test = "test"
+
+struc = ExampleStructure(t)
+
+res = s.post("https://httpbin.org/post", data=struc).structure(TestResponse)
+print(res.structured.json.test.test) # test
+```
