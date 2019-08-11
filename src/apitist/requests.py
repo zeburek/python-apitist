@@ -4,6 +4,8 @@ from typing import List, Type, Union
 from requests import PreparedRequest, Request, Response
 from requests import Session as OldSession
 
+from apitist.logging import _logger
+
 
 class SessionHook(ABC):
     pass
@@ -39,13 +41,26 @@ class Session(OldSession):
         array.append(hook)
 
     def add_request_hook(self, hook: Type[RequestHook]):
+        _logger.debug("Adding new request hook")
         self._add_hook(hook, self.request_hooks)
 
     def add_prep_request_hook(self, hook: Type[PreparedRequestHook]):
+        _logger.debug("Adding new prepared request hook")
         self._add_hook(hook, self.prep_request_hooks)
 
     def add_response_hook(self, hook: Type[ResponseHook]):
+        _logger.debug("Adding new response hook")
         self._add_hook(hook, self.response_hooks)
+
+    def add_hook(
+        self, hook: Type[Union[RequestHook, PreparedRequestHook, ResponseHook]]
+    ):
+        if issubclass(hook, RequestHook):
+            self.add_request_hook(hook)
+        elif issubclass(hook, PreparedRequestHook):
+            self.add_prep_request_hook(hook)
+        elif issubclass(hook, ResponseHook):
+            self.add_response_hook(hook)
 
     def _run_hooks(
         self,

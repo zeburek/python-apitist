@@ -1,5 +1,10 @@
+import types
+from typing import Type
+
+import attr
 from requests import PreparedRequest, Request, Response
 
+from .constructor import converter
 from .logging import _logger
 from .requests import PreparedRequestHook, RequestHook, ResponseHook
 
@@ -56,4 +61,32 @@ class ResponseInfoLoggingHook(ResponseHook):
 
     def run(self, response: Response) -> Response:
         _logger.info(self.formatter.format(res=response))
+        return response
+
+
+class RequestConverterHook(RequestHook):
+    def run(self, request: Request) -> Request:
+        if "__attrs_attrs__" in dir(request.data):
+            request.json = converter.unstructure(request.data)
+            request.data = None
+        return request
+
+
+class ResponseConverterHook(ResponseHook):
+    def run(self, response: Response) -> Response:
+        def func(self, t: Type) -> Response:
+            try:
+                self.structured = converter.structure(self.json(), t)
+            except TypeError as e:
+                fields = attr.fields_dict(t)
+                raise TypeError(
+                    f"Got miss-matched parameters in dicts. "
+                    f"Info about first level:"
+                    f"\n\tExpect: {sorted(fields)}"
+                    f"\n\tActual: {sorted(dict(self.data).keys())}"
+                    f"\n\nOriginal exception: {e}"
+                )
+            return self
+
+        response.structure = types.MethodType(func, response)
         return response
