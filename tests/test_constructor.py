@@ -81,3 +81,9 @@ class TestConstructor:
         dict_ = NothingDict()
         dict_["test"] = value
         assert bool(dict_) == result
+
+    @pytest.mark.parametrize(
+        "value,result", [("test", "test"), (0, "0"), (None, None)]
+    )
+    def test_structure_call(self, converter, value, result):
+        assert converter._structure_call(value, str) == result
