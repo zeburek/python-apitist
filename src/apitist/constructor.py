@@ -2,10 +2,7 @@ import attr
 import cattr
 import pendulum
 
-
-def _subclass(typ):
-    """ a shortcut """
-    return lambda cls: issubclass(cls, typ)
+from apitist.utils import _subclass
 
 
 def _structure_date_time(isostring, _):
@@ -72,6 +69,12 @@ class Converter(cattr.Converter):
         self.register_hooks(
             pendulum.DateTime, _structure_date_time, _unstructure_date_time
         )
+
+    def _structure_call(self, obj, cl):
+        """Just call ``cl`` with the given ``obj``."""
+        if obj is None:
+            return None
+        return cl(obj)
 
 
 class NothingDict(dict):

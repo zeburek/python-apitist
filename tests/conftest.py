@@ -6,6 +6,7 @@ from testfixtures import LogCapture
 
 from apitist import logging as log
 from apitist.constructor import Converter
+from apitist.random import Randomer
 from apitist.requests import Session
 
 
@@ -17,6 +18,19 @@ def converter():
 @pytest.fixture
 def session():
     return Session()
+
+
+@pytest.fixture
+def randomer():
+    return Randomer()
+
+
+@pytest.fixture
+def random():
+    rand = Randomer()
+    rand.add_type(str, lambda: "test")
+    rand.add_type(int, lambda: 50)
+    return rand
 
 
 @pytest.fixture()
