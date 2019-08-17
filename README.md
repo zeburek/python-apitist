@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/zeburek/python-apitist.svg?branch=master)](https://travis-ci.org/zeburek/python-apitist)
+
 # python-apitist
 
 Brand new way to test your API
