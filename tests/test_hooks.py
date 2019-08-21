@@ -86,7 +86,7 @@ class TestHooks:
         session.add_hook(ResponseConverterHook)
         res = session.post("http://httpbin.org/post")
         res.structure(ExampleResponse)
-        assert isinstance(res.structured, ExampleResponse)
+        assert isinstance(res.data, ExampleResponse)
 
     def test_response_converter_incorrect_type(self, session):
         session.add_hook(ResponseConverterHook)

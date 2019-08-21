@@ -76,7 +76,7 @@ class ResponseConverterHook(ResponseHook):
     def run(self, response: Response) -> Response:
         def func(self, t: Type) -> Response:
             try:
-                self.structured = converter.structure(self.json(), t)
+                self.data = converter.structure(self.json(), t)
             except TypeError as e:
                 fields = attr.fields_dict(t)
                 raise TypeError(
