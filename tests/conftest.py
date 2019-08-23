@@ -4,7 +4,7 @@ import pytest
 
 from testfixtures import LogCapture
 
-from apitist import logging as log
+from apitist.logging import Logging
 from apitist.constructor import Converter
 from apitist.random import Randomer
 from apitist.requests import Session
@@ -41,6 +41,6 @@ def capture():
 
 @pytest.fixture()
 def enable_debug_logging():
-    log._logger.setLevel(logging.DEBUG)
+    Logging.logger.setLevel(logging.DEBUG)
     yield
-    log._logger.setLevel(log.LOG_LEVEL)
+    Logging.logger.setLevel(Logging.LOG_LEVEL)

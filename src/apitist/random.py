@@ -4,7 +4,7 @@ import attr
 
 from apitist.utils import has_args, is_attrs_class, is_sequence, is_tuple
 
-from .logging import _logger
+from .logging import Logging
 
 T = typing.TypeVar("T")
 
@@ -29,7 +29,7 @@ class Randomer:
     def run_hook(self, t: typing.Type):
         """Generate random data for given type"""
         res = self.get_hook(t)()
-        _logger.debug("Generated data for type %s: %s", t, res)
+        Logging.logger.debug("Generated data for type %s: %s", t, res)
         return res
 
     def add_type(self, t: typing.Type[T], func: typing.Callable[[], T]):
@@ -38,8 +38,10 @@ class Randomer:
         Function should return given type.
         """
         if t in self._types_dict:
-            _logger.warning("Type %s already exists in dict, overriding", t)
-        _logger.debug("Registering type %s with function %s", t, func)
+            Logging.logger.warning(
+                "Type %s already exists in dict, overriding", t
+            )
+        Logging.logger.debug("Registering type %s with function %s", t, func)
         self._types_dict[t] = func
 
     def add_types(
@@ -49,7 +51,7 @@ class Randomer:
         Add new types for random generation.
         Functions should return given type.
         """
-        _logger.debug("Registering list of types: %s", types_dict)
+        Logging.logger.debug("Registering list of types: %s", types_dict)
         self._types_dict.update(types_dict)
 
     def random_object(
@@ -73,7 +75,7 @@ class Randomer:
         :param set_params: Custom params which would be manually set to type
         :return: Object of given type
         """
-        _logger.debug("Generating random data for type %s", t)
+        Logging.logger.debug("Generating random data for type %s", t)
         if ignore is None:
             ignore = list()
         if t in self.available_hooks:
@@ -101,7 +103,9 @@ class Randomer:
                     **set_params,
                 )
             data = t(**data)
-            _logger.debug("Generating random data for attrs type %s", data)
+            Logging.logger.debug(
+                "Generating random data for attrs type %s", data
+            )
             return data
         elif is_tuple(t) and has_args(t):
             return (

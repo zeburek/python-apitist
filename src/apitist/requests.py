@@ -4,7 +4,7 @@ from typing import List, Type, Union
 from requests import PreparedRequest, Request, Response
 from requests import Session as OldSession
 
-from apitist.logging import _logger
+from apitist.logging import Logging
 
 
 class SessionHook(ABC):
@@ -41,15 +41,15 @@ class Session(OldSession):
         array.append(hook)
 
     def add_request_hook(self, hook: Type[RequestHook]):
-        _logger.debug("Adding new request hook")
+        Logging.logger.debug("Adding new request hook")
         self._add_hook(hook, self.request_hooks)
 
     def add_prep_request_hook(self, hook: Type[PreparedRequestHook]):
-        _logger.debug("Adding new prepared request hook")
+        Logging.logger.debug("Adding new prepared request hook")
         self._add_hook(hook, self.prep_request_hooks)
 
     def add_response_hook(self, hook: Type[ResponseHook]):
-        _logger.debug("Adding new response hook")
+        Logging.logger.debug("Adding new response hook")
         self._add_hook(hook, self.response_hooks)
 
     def add_hook(
