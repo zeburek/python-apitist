@@ -4,6 +4,8 @@ from typing import Type
 import attr
 from requests import PreparedRequest, Request, Response
 
+from apitist.utils import is_attrs_class
+
 from .constructor import converter
 from .logging import Logging
 from .requests import PreparedRequestHook, RequestHook, ResponseHook
@@ -66,7 +68,7 @@ class ResponseInfoLoggingHook(ResponseHook):
 
 class RequestConverterHook(RequestHook):
     def run(self, request: Request) -> Request:
-        if "__attrs_attrs__" in dir(request.data):
+        if is_attrs_class(request.data):
             request.json = converter.unstructure(request.data)
             request.data = None
         return request
@@ -83,7 +85,7 @@ class ResponseConverterHook(ResponseHook):
                     f"Got miss-matched parameters in dicts. "
                     f"Info about first level:"
                     f"\n\tExpect: {sorted(fields)}"
-                    f"\n\tActual: {sorted(dict(self.data).keys())}"
+                    f"\n\tActual: {sorted(dict(self.json()).keys())}"
                     f"\n\nOriginal exception: {e}"
                 )
             return self
