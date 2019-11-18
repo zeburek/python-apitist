@@ -91,5 +91,5 @@ class TestHooks:
     def test_response_converter_incorrect_type(self, session):
         session.add_hook(ResponseConverterHook)
         res = session.post("http://httpbin.org/post")
-        with pytest.raises(AttributeError):
+        with pytest.raises(TypeError):
             res.structure(ExampleData)
