@@ -4,8 +4,8 @@ import pytest
 
 from testfixtures import LogCapture
 
-from apitist.logging import Logging
 from apitist.constructor import Converter
+from apitist.logging import Logging
 from apitist.random import Randomer
 from apitist.requests import Session
 

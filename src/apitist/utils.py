@@ -10,7 +10,7 @@ from typing import (
 )
 
 version_info = sys.version_info[0:3]
-is_py37 = version_info[:2] == (3, 7)
+is_py37_or_higher = version_info[:2] in [(3, 7), (3, 8)]
 
 
 def is_attrs_class(cls):
@@ -26,7 +26,7 @@ def _subclass(typ):
     return lambda cls: issubclass(cls, typ)
 
 
-if is_py37:
+if is_py37_or_higher:
     from typing import List, Union, _GenericAlias
 
     def is_union_type(obj):
