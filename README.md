@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/zeburek/python-apitist.svg?branch=master)](https://travis-ci.org/zeburek/python-apitist) [![PyPI version](https://badge.fury.io/py/python-apitist.svg)](https://badge.fury.io/py/python-apitist) [![Downloads](https://pepy.tech/badge/python-apitist)](https://pepy.tech/project/python-apitist)
+[![Build Status](https://github.com/zeburek/python-apitist/workflows/Python%20package/badge.svg)](https://github.com/zeburek/python-apitist/actions) [![PyPI version](https://badge.fury.io/py/python-apitist.svg)](https://badge.fury.io/py/python-apitist) [![Downloads](https://pepy.tech/badge/python-apitist)](https://pepy.tech/project/python-apitist)
 
 # python-apitist
 
