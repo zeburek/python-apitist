@@ -1,0 +1,23 @@
+import attr
+
+from apitist.requests import Session
+from apitist.hooks import (
+    PrepRequestInfoLoggingHook,
+    ResponseInfoLoggingHook,
+)
+
+
+def init_session():
+    s = Session()
+    s.add_hook(PrepRequestInfoLoggingHook)
+    s.add_hook(ResponseInfoLoggingHook)
+    return s
+
+
+@attr.s
+class {{ project_name }}Client:
+    hostname: str = attr.ib()
+    _s: Session = attr.ib(factory=attr.Factory(init_session))
+
+    def get_request(self, **kwargs):
+        return self._s.get(self.hostname + "/get", **kwargs)

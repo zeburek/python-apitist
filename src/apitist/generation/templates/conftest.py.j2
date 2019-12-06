@@ -1,0 +1,15 @@
+import pytest
+
+from api.client import {{ project_name }}Client
+
+
+def pytest_addoption(parser):
+    group = parser.getgroup("{{ project_name }} tests configuration")
+    group.addoption("--hostname", help="{{ project_name }} hostname")
+
+
+@pytest.fixture(scope="session")
+def client(request):
+    hostname = request.config.getoption("--hostname")
+    client = {{ project_name }}Client(hostname)
+    return client

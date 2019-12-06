@@ -1,0 +1,17 @@
+[tox]
+envlist = py3
+skipsdist = True
+
+[testenv]
+deps =
+    -rrequirements.txt
+commands =
+    pytest
+
+[pytest]
+log_format = [%(asctime)s][%(levelname)s][%(name)s]: %(message)s
+log_date_format = %Y-%m-%d %H:%M:%S
+filterwarnings =
+    ignore::DeprecationWarning
+    ignore::pytest.PytestWarning
+testpaths = tests
