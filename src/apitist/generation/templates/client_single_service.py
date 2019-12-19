@@ -1,10 +1,7 @@
 import attr
 
+from apitist.hooks import PrepRequestInfoLoggingHook, ResponseInfoLoggingHook
 from apitist.requests import Session
-from apitist.hooks import (
-    PrepRequestInfoLoggingHook,
-    ResponseInfoLoggingHook,
-)
 
 
 def init_session():
@@ -15,7 +12,7 @@ def init_session():
 
 
 @attr.s
-class {{ project_name }}Client:
+class TestClient:
     hostname: str = attr.ib()
     _s: Session = attr.ib(factory=attr.Factory(init_session))
 
