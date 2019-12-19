@@ -77,6 +77,25 @@ class TestRandomer:
         assert randomer.run_hook(TypeStr) == "test2"
 
     @pytest.mark.parametrize(
+        "key,value",
+        [
+            ("str", "str"),
+            ("int", 10),
+            ("list", ["some", "data"]),
+            ("dict", {"key": 100, "val": {10, 12, 13}}),
+        ],
+    )
+    def test_run_hook_kwargs_pass(self, randomer, key, value):
+        def func(**kwargs):
+            if kwargs.get(key):
+                return kwargs.get(key)
+            return "test"
+
+        randomer.add_type(str, func)
+        assert randomer.run_hook(str) == "test"
+        assert randomer.run_hook(str, **{key: value}) == value
+
+    @pytest.mark.parametrize(
         "type_,object_",
         [
             (Child, Child(50, ["test"], ("test",), "test")),
@@ -191,4 +210,35 @@ class TestRandomer:
         self, random, type_, use, params, exp_data
     ):
         data = random.partial(type_, use=use, **params)
+        assert converter.unstructure(data) == exp_data
+
+    @pytest.mark.parametrize(
+        "use,exp_data",
+        [
+            (["value4"], {"value4": "test", "value5": {}}),
+            (
+                ["value3", "value6"],
+                {"value5": {"value3": {"data": 120}}, "value6": {"data": 120}},
+            ),
+        ],
+    )
+    def test_random_partial_attrs_custom_hook(self, random, use, exp_data):
+        @attr.s
+        class Child2:
+            value1: int = attr.ib()
+
+        @attr.s
+        class Child1:
+            value2: int = attr.ib()
+            value3: Child2 = attr.ib()
+
+        @attr.s
+        class Parent:
+            value4: str = attr.ib()
+            value5: Child1 = attr.ib()
+            value6: Child2 = attr.ib()
+
+        random.add_type(Child2, lambda: {"data": 120})
+
+        data = random.partial(Parent, use=use)
         assert converter.unstructure(data) == exp_data
