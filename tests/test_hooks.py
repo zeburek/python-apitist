@@ -7,15 +7,19 @@ import pytest
 import attr
 
 from apitist.hooks import (
+    PreparedRequestHook,
     PrepRequestDebugLoggingHook,
     PrepRequestInfoLoggingHook,
     RequestConverterHook,
     RequestDebugLoggingHook,
+    RequestHook,
     RequestInfoLoggingHook,
     ResponseConverterHook,
     ResponseDebugLoggingHook,
+    ResponseHook,
     ResponseInfoLoggingHook,
 )
+from apitist.requests import Session, session
 
 
 @attr.s
@@ -36,6 +40,22 @@ class ExampleResponse:
 
 
 class TestHooks:
+    def test_session_creation(self):
+        assert isinstance(session(), Session)
+
+    @pytest.mark.parametrize(
+        "hook", [(PreparedRequestHook), (RequestHook), (ResponseHook)]
+    )
+    def test_empty_hooks(self, hook):
+        assert hook().run(None) is None
+
+    @pytest.mark.parametrize("hook", [int, str, bool])
+    def test_incorrect_hook(self, session, hook):
+        session.add_hook(hook)
+        assert len(session.request_hooks) == 0
+        assert len(session.prep_request_hooks) == 0
+        assert len(session.response_hooks) == 0
+
     @pytest.mark.usefixtures("enable_debug_logging")
     @pytest.mark.parametrize(
         "hook,text",

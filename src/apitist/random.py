@@ -1,3 +1,4 @@
+import inspect
 import typing
 
 import attr
@@ -26,9 +27,16 @@ class Randomer:
             raise TypeError("Unable to find hook for {} type".format(t))
         return func
 
-    def run_hook(self, t: typing.Type):
+    def run_hook(self, t: typing.Type, **set_params):
         """Generate random data for given type"""
-        res = self.get_hook(t)()
+        func = self.get_hook(t)
+        if inspect.getfullargspec(func).varkw:
+            Logging.logger.debug(
+                "All additional params will be passed to hook: %s", set_params
+            )
+            res = func(**set_params)
+        else:
+            res = func()
         Logging.logger.debug("Generated data for type %s: %s", t, res)
         return res
 
@@ -71,15 +79,19 @@ class Randomer:
         :param t: Type which would me generated randomly
         :param required_only: Use only fields which do not have default values
         :param ignore: List of fields which should be ignored
-        :param inverse: Inverse ignore list
+            (will be passed to hook kwargs)
+        :param inverse: Inverse ignore list (will be passed to hook kwargs)
         :param set_params: Custom params which would be manually set to type
+            (will be passed to hook kwargs)
         :return: Object of given type
         """
         Logging.logger.debug("Generating random data for type %s", t)
         if ignore is None:
             ignore = list()
         if t in self.available_hooks:
-            return self.run_hook(t)
+            return self.run_hook(
+                t, ignore=ignore, inverse=inverse, **set_params
+            )
         elif is_attrs_class(t):
             data = {}
             for field in attr.fields(t):
@@ -138,7 +150,7 @@ class Randomer:
         Create object of given type with random data with only given fields.
         """
         if t in self.available_hooks:
-            return self.run_hook(t)
+            return self.run_hook(t, use=use, **set_params)
         elif "__attrs_attrs__" in dir(t):
             data = {}
             for field in attr.fields(t):
@@ -151,7 +163,13 @@ class Randomer:
                 if (
                     use
                     and key not in use
-                    and "__attrs_attrs__" not in dir(field.type)
+                    and (
+                        "__attrs_attrs__" not in dir(field.type)
+                        or (
+                            "__attrs_attrs__" in dir(field.type)
+                            and field.type in self.available_hooks
+                        )
+                    )
                 ):
                     data[key] = attr.NOTHING
                     continue
