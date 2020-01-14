@@ -67,6 +67,7 @@ class Randomer:
         t: typing.Type[T],
         required_only=False,
         ignore: typing.List[str] = None,
+        only: typing.List[str] = None,
         inverse=False,
         **set_params,
     ) -> T:
@@ -80,12 +81,21 @@ class Randomer:
         :param required_only: Use only fields which do not have default values
         :param ignore: List of fields which should be ignored
             (will be passed to hook kwargs)
+        :param only: List of fields which should be used
+            (just a workaround near ignore + inverse)
         :param inverse: Inverse ignore list (will be passed to hook kwargs)
         :param set_params: Custom params which would be manually set to type
             (will be passed to hook kwargs)
         :return: Object of given type
         """
         Logging.logger.debug("Generating random data for type %s", t)
+        if only and ignore:
+            raise ValueError(
+                "Only one of parameters - only or ignore should be used"
+            )
+        if only:
+            ignore = only
+            inverse = True
         if ignore is None:
             ignore = list()
         if t in self.available_hooks:
@@ -176,7 +186,9 @@ class Randomer:
 
                 data[key] = self.random_partial(field.type, use, **set_params)
 
-            return t(**data)
+            if not all(v == attr.NOTHING for _, v in data.items()):
+                return t(**data)
+            return attr.NOTHING
 
         elif is_tuple(t) and has_args(t):
             return (self.random_partial(t.__args__[0], use=use, **set_params),)

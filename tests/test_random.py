@@ -154,6 +154,25 @@ class TestRandomer:
         assert random.object(type_, ignore=ignore, inverse=True) == object_
 
     @pytest.mark.parametrize(
+        "type_,ignore,object_",
+        [
+            (Child, ["value1"], Child(50, None, tuple(), None)),
+            (Data, ["value1", "val1"], Data("test", None, None)),
+            (
+                Data,
+                ["value1", "val2"],
+                Data(None, Child(50, None, tuple(), None), None),
+            ),
+        ],
+    )
+    def test_random_object_only(self, random, type_, ignore, object_):
+        assert random.object(type_, only=ignore) == object_
+
+    def test_random_object_only_ignore(self, random):
+        with pytest.raises(ValueError):
+            random.object(Data, only=["value1"], ignore=["value2"])
+
+    @pytest.mark.parametrize(
         "type_,object_,params",
         [
             (Child, Child(560, ["test"], ("test",), "test"), {"value1": 560}),
@@ -174,7 +193,7 @@ class TestRandomer:
             (Child, ["value2"], {"value2": ["test"]}),
             (Child, ["value3"], {"value3": ("test",)}),
             (Child, ["value4"], {"value4": "test"}),
-            (Data, ["val1"], {"val1": "test", "val2": {}}),
+            (Data, ["val1"], {"val1": "test"}),
             (
                 Data,
                 ["val1", "value2"],
@@ -215,7 +234,7 @@ class TestRandomer:
     @pytest.mark.parametrize(
         "use,exp_data",
         [
-            (["value4"], {"value4": "test", "value5": {}}),
+            (["value4"], {"value4": "test"}),
             (
                 ["value3", "value6"],
                 {"value5": {"value3": {"data": 120}}, "value6": {"data": 120}},
