@@ -6,8 +6,7 @@ Brand new way to test your API
 
 # Installation
 
-Actually project is not published on PyPi,
-so the only way:
+Run the following command in your command line::
 ```bash
 pip install python-apitist
 ```
