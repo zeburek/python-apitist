@@ -71,6 +71,7 @@ class Session(OldSession):
     ):
         for hook in array:
             data = hook().run(data)
+        return data
 
     def request(
         self,
@@ -141,9 +142,9 @@ class Session(OldSession):
             cookies=cookies,
             hooks=hooks,
         )
-        self._run_hooks(self.request_hooks, req)
+        req = self._run_hooks(self.request_hooks, req)
         prep = self.prepare_request(req)
-        self._run_hooks(self.prep_request_hooks, prep)
+        prep = self._run_hooks(self.prep_request_hooks, prep)
 
         proxies = proxies or {}
 
@@ -155,7 +156,7 @@ class Session(OldSession):
         send_kwargs = {"timeout": timeout, "allow_redirects": allow_redirects}
         send_kwargs.update(settings)
         resp = self.send(prep, **send_kwargs)
-        self._run_hooks(self.response_hooks, resp)
+        resp = self._run_hooks(self.response_hooks, resp)
 
         return resp
 
