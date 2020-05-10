@@ -1,8 +1,8 @@
 ==============
-python-apitist
+apitist
 ==============
 
-This is the documentation of **python-apitist**.
+This is the documentation of **apitist**.
 
 .. note::
 

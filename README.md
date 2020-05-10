@@ -1,6 +1,6 @@
 [![Build Status](https://github.com/zeburek/python-apitist/workflows/Python%20package/badge.svg)](https://github.com/zeburek/python-apitist/actions) [![PyPI version](https://badge.fury.io/py/python-apitist.svg)](https://badge.fury.io/py/python-apitist) [![Downloads](https://pepy.tech/badge/python-apitist)](https://pepy.tech/project/python-apitist)
 
-# python-apitist
+# apitist
 
 Brand new way to test your API
 
@@ -8,7 +8,7 @@ Brand new way to test your API
 
 Run the following command in your command line::
 ```bash
-pip install python-apitist
+pip install apitist
 ```
 
 # Default hooks

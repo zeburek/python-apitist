@@ -8,7 +8,7 @@ PAPER         =
 BUILDDIR      = ../build/sphinx/
 AUTODOCDIR    = api
 AUTODOCBUILD  = sphinx-apidoc
-PROJECT       = python-apitist
+PROJECT       = apitist
 MODULEDIR     = ../src/apitist
 
 # User-friendly check for sphinx-build
