@@ -22,12 +22,6 @@ jobs:
     - name: Lint with tox
       run: |
         tox
-    - name: Run codacy-analysis-cli
-      if: ${{ matrix.python-version == 3.8 }}
-      uses: mrfyda/codacy-analysis-cli-action@master
-      with:
-        project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
-        directory: ./src
     - name: Run codacy-coverage-reporter
       if: ${{ matrix.python-version == 3.8 }}
       uses: codacy/codacy-coverage-reporter-action@master
