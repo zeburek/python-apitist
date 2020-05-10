@@ -4,23 +4,23 @@
 
 Brand new way to test your API
 
-# Installation
+## Installation
 
 Run the following command in your command line::
 ```bash
 pip install apitist
 ```
 
-# Default hooks
+## Default hooks
 
-- RequestDebugLoggingHook
-- RequestInfoLoggingHook
-- PrepRequestDebugLoggingHook
-- PrepRequestInfoLoggingHook
-- ResponseDebugLoggingHook
-- ResponseInfoLoggingHook
+  - RequestDebugLoggingHook
+  - RequestInfoLoggingHook
+  - PrepRequestDebugLoggingHook
+  - PrepRequestInfoLoggingHook
+  - ResponseDebugLoggingHook
+  - ResponseInfoLoggingHook
 
-## Example usage
+### Example usage
 
 ```python
 from apitist.hooks import PrepRequestInfoLoggingHook, ResponseInfoLoggingHook
@@ -36,7 +36,7 @@ s.add_response_hook(ResponseInfoLoggingHook)
 s.post("https://httpbin.org/post", params={"q": "test"})
 ```
 
-# Custom Hooks
+## Custom Hooks
 
 ```python
 from requests import Request, PreparedRequest, Response
@@ -71,7 +71,7 @@ s.add_response_hook(RespHook)
 s.get("https://ya.ru", params={"q": "test"})
 ```
 
-# Working with constructor
+## Working with constructor
 
 ```python
 import attr
@@ -125,7 +125,7 @@ res = s.post("https://httpbin.org/post", data=struc).structure(TestResponse)
 print(res.structured.json.test.test) # test
 ```
 
-# Using random data generator
+## Using random data generator
 
 First of all create an instance of random class:
 

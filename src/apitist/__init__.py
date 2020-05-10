@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+"""Apitist package"""
 from pkg_resources import DistributionNotFound, get_distribution
 
 try:
