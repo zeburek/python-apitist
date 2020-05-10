@@ -1,9 +1,16 @@
 import inspect
+import random as rnd
 import typing
 
 import attr
 
-from apitist.utils import has_args, is_attrs_class, is_sequence, is_tuple
+from apitist.utils import (
+    has_args,
+    is_attrs_class,
+    is_sequence,
+    is_tuple,
+    is_union_type,
+)
 
 from .logging import Logging
 
@@ -129,6 +136,14 @@ class Randomer:
                 "Generating random data for attrs type %s", data
             )
             return data
+        elif is_union_type(t) and has_args(t):
+            return self.random_object(
+                rnd.choice(t.__args__),
+                required_only=required_only,
+                ignore=ignore,
+                inverse=inverse,
+                **set_params,
+            )
         elif is_tuple(t) and has_args(t):
             return (
                 self.random_object(
@@ -190,6 +205,10 @@ class Randomer:
                 return t(**data)
             return attr.NOTHING
 
+        elif is_union_type(t) and has_args(t):
+            return self.random_partial(
+                rnd.choice(t.__args__), use=use, **set_params
+            )
         elif is_tuple(t) and has_args(t):
             return (self.random_partial(t.__args__[0], use=use, **set_params),)
         elif is_sequence(t) and has_args(t):

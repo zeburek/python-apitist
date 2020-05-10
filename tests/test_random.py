@@ -18,6 +18,7 @@ class Child:
     value2: typing.List[str] = attr.ib()
     value3: typing.Tuple[str] = attr.ib(default=tuple())
     value4: str = attr.ib(default=None)
+    value5: typing.Union[int] = attr.ib(default=None)
 
 
 @attr.s
@@ -98,10 +99,12 @@ class TestRandomer:
     @pytest.mark.parametrize(
         "type_,object_",
         [
-            (Child, Child(50, ["test"], ("test",), "test")),
+            (Child, Child(50, ["test"], ("test",), "test", 50)),
             (
                 Data,
-                Data("test", Child(50, ["test"], ("test",), "test"), "test"),
+                Data(
+                    "test", Child(50, ["test"], ("test",), "test", 50), "test"
+                ),
             ),
         ],
     )
@@ -124,11 +127,13 @@ class TestRandomer:
     @pytest.mark.parametrize(
         "type_,ignore,object_",
         [
-            (Child, ["value1"], Child(None, ["test"], ("test",), "test")),
+            (Child, ["value1"], Child(None, ["test"], ("test",), "test", 50)),
             (
                 Data,
                 ["value1", "val1"],
-                Data(None, Child(None, ["test"], ("test",), "test"), "test"),
+                Data(
+                    None, Child(None, ["test"], ("test",), "test", 50), "test"
+                ),
             ),
             (Data, ["value1", "val2"], Data("test", None, "test")),
         ],
@@ -175,16 +180,36 @@ class TestRandomer:
     @pytest.mark.parametrize(
         "type_,object_,params",
         [
-            (Child, Child(560, ["test"], ("test",), "test"), {"value1": 560}),
+            (
+                Child,
+                Child(560, ["test"], ("test",), "test", 50),
+                {"value1": 560},
+            ),
             (
                 Data,
-                Data("rest", Child(560, ["test"], ("test",), "test"), "test"),
+                Data(
+                    "rest", Child(560, ["test"], ("test",), "test", 50), "test"
+                ),
                 {"value1": 560, "val1": "rest"},
             ),
         ],
     )
     def test_random_object_set_params(self, random, type_, object_, params):
         assert random.object(type_, **params) == object_
+
+    def test_random_object_union(self, random):
+        @attr.s
+        class NewObj:
+            value1: typing.Union[int, str] = attr.ib()
+            value2: typing.Optional[str] = attr.ib()
+
+        for _ in range(20):
+            assert converter.unstructure(random.object(NewObj)).get(
+                "value1"
+            ) in ["test", 50]
+            assert converter.unstructure(random.object(NewObj)).get(
+                "value2"
+            ) in ["test", None]
 
     @pytest.mark.parametrize(
         "type_,use,exp_data",
@@ -193,6 +218,7 @@ class TestRandomer:
             (Child, ["value2"], {"value2": ["test"]}),
             (Child, ["value3"], {"value3": ("test",)}),
             (Child, ["value4"], {"value4": "test"}),
+            (Child, ["value5"], {"value5": 50}),
             (Data, ["val1"], {"val1": "test"}),
             (
                 Data,
@@ -261,3 +287,14 @@ class TestRandomer:
 
         data = random.partial(Parent, use=use)
         assert converter.unstructure(data) == exp_data
+
+    def test_random_partial_union(self, random):
+        @attr.s
+        class NewObj:
+            value1: typing.Union[int, str] = attr.ib()
+            value2: int = attr.ib()
+
+        for _ in range(10):
+            assert converter.unstructure(
+                random.partial(NewObj, use=["value1"])
+            ) in [{"value1": 50}, {"value1": "test"}]
