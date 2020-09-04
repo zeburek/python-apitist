@@ -4,15 +4,15 @@ import pytest
 
 from testfixtures import LogCapture
 
-from apitist.constructor import Converter
+from apitist.constructor import Converter, ConverterType
 from apitist.logging import Logging
 from apitist.random import Randomer
 from apitist.requests import Session
 
 
-@pytest.fixture
-def converter():
-    return Converter()
+@pytest.fixture(params=[ConverterType.ATTRS, ConverterType.DATACLASS])
+def converter(request):
+    return Converter(request.param)
 
 
 @pytest.fixture

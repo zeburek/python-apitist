@@ -1,5 +1,8 @@
+from enum import Enum
+
 import attr
 import cattr
+import convclasses
 import pendulum
 
 from apitist.utils import _subclass
@@ -21,7 +24,12 @@ def _unstructure_date_time(dt):
         return None
 
 
-class Converter(cattr.Converter):
+class ConverterType(Enum):
+    ATTRS = "attrs"
+    DATACLASS = "dataclass"
+
+
+class _Converter:
     """Converts between structured and unstructured data."""
 
     def set_dict_factory(self, dict_factory):
@@ -77,6 +85,14 @@ class Converter(cattr.Converter):
         return cl(obj)
 
 
+class AttrsConverter(_Converter, cattr.Converter):
+    _converter_type = ConverterType.ATTRS
+
+
+class DataclassConverter(_Converter, convclasses.Converter):
+    _converter_type = ConverterType.DATACLASS
+
+
 class NothingDict(dict):
     """
     Default dict for unstructuring
@@ -90,6 +106,13 @@ class NothingDict(dict):
         if value == attr.NOTHING:
             return
         super().__setitem__(key, value)
+
+
+def Converter(converter_type: ConverterType = ConverterType.ATTRS):
+    if converter_type == ConverterType.ATTRS:
+        return AttrsConverter()
+    else:
+        return DataclassConverter()
 
 
 converter = Converter()

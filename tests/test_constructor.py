@@ -1,3 +1,5 @@
+from dataclasses import dataclass, field
+
 import pytest
 
 import attr
@@ -7,7 +9,7 @@ from apitist.constructor import (
     NothingDict,
     _structure_date_time,
     _subclass,
-    _unstructure_date_time,
+    _unstructure_date_time, ConverterType,
 )
 
 
@@ -19,6 +21,12 @@ class TypeStr(str):
 class ExampleData:
     test: TypeStr = attr.ib()
     example: pendulum.DateTime = attr.ib(default=None)
+
+
+@dataclass
+class ExampleDataclass:
+    test: TypeStr
+    example: pendulum.DateTime = field(default=None)
 
 
 class TestConstructor:
@@ -69,10 +77,11 @@ class TestConstructor:
 
     def test_converter_additional_hooks(self, converter):
         data = {"test": TypeStr("test"), "example": "2019-03-06T14:58:10"}
+        _type = ExampleData if converter._converter_type == ConverterType.ATTRS else ExampleDataclass
         with pytest.raises(ValueError):
-            converter.structure(data, ExampleData)
+            converter.structure(data, _type)
         converter.register_additional_hooks()
-        assert converter.structure(data, ExampleData)
+        assert converter.structure(data, _type)
 
     @pytest.mark.parametrize(
         "value,result", [("test", True), (0, True), (attr.NOTHING, False)]
