@@ -4,6 +4,13 @@
 
 Brand new way to test your API
 
+## Main features:
+
+- Adding hooks for requests library
+- Default hooks for:
+    - Logging
+    - Structuring/Unstructuring data
+
 ## Installation
 
 Run the following command in your command line::
@@ -13,12 +20,18 @@ pip install apitist
 
 ## Default hooks
 
-  - RequestDebugLoggingHook
-  - RequestInfoLoggingHook
-  - PrepRequestDebugLoggingHook
-  - PrepRequestInfoLoggingHook
-  - ResponseDebugLoggingHook
-  - ResponseInfoLoggingHook
+  - RequestDebugLoggingHook - logs request content with level DEBUG
+  - RequestInfoLoggingHook - logs request content with level INFO
+  - PrepRequestDebugLoggingHook - logs prepared request content (e.g. you will see query parameters in URL) with level DEBUG
+  - PrepRequestInfoLoggingHook - logs prepared request content with level INFO
+  - ResponseDebugLoggingHook - logs response content with level DEBUG
+  - ResponseInfoLoggingHook - logs response content with level INFO
+  - RequestAttrsConverterHook - converts attrs class in `data` field into json
+  - RequestDataclassConverterHook - converts dataclass class in `data` field into json
+  - ResponseAttrsConverterHook - adds `structure(type)` function to `requests.Response` class, which will structure 
+  response according to attrs class given to it
+  - ResponseDataclassConverterHook - adds `structure(type)` function to `requests.Response` class, which will structure 
+  response according to dataclass class given to it
 
 ### Example usage
 
@@ -156,6 +169,7 @@ defined types:
 
 ```python
 import attr
+import dataclasses
 import typing
 
 rand.object(str) # '0.6147789314561384'
@@ -167,7 +181,21 @@ class Data:
     value2: typing.List[str] = attr.ib()
     value3: typing.Tuple[float] = attr.ib()
 
+@dataclasses.dataclass
+class Dataclass:
+    value1: str
+    value2: typing.List[str]
+    value3: typing.Tuple[float]
+
 print(rand.object(Data))
+# Data(
+#   value1='0.491058956716827',
+#   value2=['0.6568036485871975'],
+#   value3=(0.8603579349502298,)
+# )
+
+# Also works for dataclasses
+print(rand.object(Dataclass))
 # Data(
 #   value1='0.491058956716827',
 #   value2=['0.6568036485871975'],
