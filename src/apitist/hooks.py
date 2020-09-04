@@ -1,3 +1,4 @@
+import dataclasses
 import types
 from typing import Type
 
@@ -6,7 +7,7 @@ from requests import PreparedRequest, Request, Response
 
 from apitist.utils import is_attrs_class
 
-from .constructor import converter
+from .constructor import converter, convclass
 from .logging import Logging
 from .requests import PreparedRequestHook, RequestHook, ResponseHook
 
@@ -66,7 +67,7 @@ class ResponseInfoLoggingHook(ResponseHook):
         return response
 
 
-class RequestConverterHook(RequestHook):
+class RequestAttrsConverterHook(RequestHook):
     def run(self, request: Request) -> Request:
         if is_attrs_class(request.data):
             request.json = converter.unstructure(request.data)
@@ -74,7 +75,18 @@ class RequestConverterHook(RequestHook):
         return request
 
 
-class ResponseConverterHook(ResponseHook):
+class RequestDataclassConverterHook(RequestHook):
+    def run(self, request: Request) -> Request:
+        if dataclasses.is_dataclass(request.data):
+            request.json = convclass.unstructure(request.data)
+            request.data = None
+        return request
+
+
+RequestConverterHook = RequestAttrsConverterHook
+
+
+class ResponseAttrsConverterHook(ResponseHook):
     def run(self, response: Response) -> Response:
         def func(self, t: Type) -> Response:
             try:
@@ -92,3 +104,26 @@ class ResponseConverterHook(ResponseHook):
 
         response.structure = types.MethodType(func, response)
         return response
+
+
+class ResponseDataclassConverterHook(ResponseHook):
+    def run(self, response: Response) -> Response:
+        def func(self, t: Type) -> Response:
+            try:
+                self.data = convclass.structure(self.json(), t)
+            except TypeError as e:
+                fields = dataclasses.fields(t)
+                raise TypeError(
+                    f"Got miss-matched parameters in dicts. "
+                    f"Info about first level:"
+                    f"\n\tExpect: {sorted(fields)}"
+                    f"\n\tActual: {sorted(dict(self.json()).keys())}"
+                    f"\n\nOriginal exception: {e}"
+                )
+            return self
+
+        response.structure = types.MethodType(func, response)
+        return response
+
+
+ResponseConverterHook = ResponseAttrsConverterHook

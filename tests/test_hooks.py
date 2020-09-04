@@ -1,6 +1,7 @@
 import json
 import logging
 import typing
+from dataclasses import dataclass
 
 import pytest
 
@@ -10,11 +11,13 @@ from apitist.hooks import (
     PreparedRequestHook,
     PrepRequestDebugLoggingHook,
     PrepRequestInfoLoggingHook,
-    RequestConverterHook,
+    RequestAttrsConverterHook,
+    RequestDataclassConverterHook,
     RequestDebugLoggingHook,
     RequestHook,
     RequestInfoLoggingHook,
-    ResponseConverterHook,
+    ResponseAttrsConverterHook,
+    ResponseDataclassConverterHook,
     ResponseDebugLoggingHook,
     ResponseHook,
     ResponseInfoLoggingHook,
@@ -37,6 +40,23 @@ class ExampleResponse:
     json: typing.Any = attr.ib()
     origin: str = attr.ib()
     url: str = attr.ib()
+
+
+@dataclass
+class ExampleDataclass:
+    test: str
+
+
+@dataclass
+class ExampleResponseDataclass:
+    args: typing.Dict
+    data: str
+    files: typing.Dict
+    form: typing.Dict
+    headers: typing.Dict
+    json: typing.Any
+    origin: str
+    url: str
 
 
 class TestHooks:
@@ -88,28 +108,55 @@ class TestHooks:
         assert text in capture.records[0].msg
 
     def test_request_converter_attrs_class(self, session):
-        session.add_hook(RequestConverterHook)
+        session.add_hook(RequestAttrsConverterHook)
         res = session.get("http://httpbin.org/get", data=ExampleData("test"))
         assert res.request.body == json.dumps({"test": "test"}).encode("utf-8")
 
     def test_request_converter_non_attrs(self, session):
-        session.add_hook(RequestConverterHook)
+        session.add_hook(RequestAttrsConverterHook)
         res = session.get("http://httpbin.org/get", data="test")
         assert res.request.body == "test"
 
     def test_response_converter_adding_function(self, session):
-        session.add_hook(ResponseConverterHook)
+        session.add_hook(ResponseAttrsConverterHook)
         res = session.get("http://httpbin.org/get")
         assert getattr(res, "structure")
 
     def test_response_converter_correct_type(self, session):
-        session.add_hook(ResponseConverterHook)
+        session.add_hook(ResponseAttrsConverterHook)
         res = session.post("http://httpbin.org/post")
         res.structure(ExampleResponse)
         assert isinstance(res.data, ExampleResponse)
 
     def test_response_converter_incorrect_type(self, session):
-        session.add_hook(ResponseConverterHook)
+        session.add_hook(ResponseAttrsConverterHook)
         res = session.post("http://httpbin.org/post")
         with pytest.raises(TypeError):
             res.structure(ExampleData)
+
+    def test_request_converter_dataclass_class(self, session):
+        session.add_hook(RequestDataclassConverterHook)
+        res = session.get("http://httpbin.org/get", data=ExampleDataclass("test"))
+        assert res.request.body == json.dumps({"test": "test"}).encode("utf-8")
+
+    def test_request_converter_non_dataclass(self, session):
+        session.add_hook(RequestDataclassConverterHook)
+        res = session.get("http://httpbin.org/get", data="test")
+        assert res.request.body == "test"
+
+    def test_response_converter_adding_function_dataclass(self, session):
+        session.add_hook(ResponseDataclassConverterHook)
+        res = session.get("http://httpbin.org/get")
+        assert getattr(res, "structure")
+
+    def test_response_converter_correct_dataclass_type(self, session):
+        session.add_hook(ResponseDataclassConverterHook)
+        res = session.post("http://httpbin.org/post")
+        res.structure(ExampleResponseDataclass)
+        assert isinstance(res.data, ExampleResponseDataclass)
+
+    def test_response_converter_incorrect_dataclass_type(self, session):
+        session.add_hook(ResponseDataclassConverterHook)
+        res = session.post("http://httpbin.org/post")
+        with pytest.raises(TypeError):
+            res.structure(ExampleDataclass)
