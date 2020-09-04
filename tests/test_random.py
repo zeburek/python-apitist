@@ -1,11 +1,12 @@
 import logging
 import typing
+from dataclasses import dataclass, field, is_dataclass
 
 import pytest
 
 import attr
 
-from apitist.constructor import converter
+from apitist.constructor import converter, convclass
 
 
 class TypeStr(str):
@@ -20,12 +21,27 @@ class Child:
     value4: str = attr.ib(default=None)
     value5: typing.Union[int] = attr.ib(default=None)
 
+@dataclass
+class ChildDataclass:
+    value1: int
+    value2: typing.List[str]
+    value3: typing.Tuple[str] = field(default_factory=tuple)
+    value4: str = field(default=None)
+    value5: typing.Union[int] = field(default=None)
+
 
 @attr.s
 class Data:
     val1: str = attr.ib()
     val2: Child = attr.ib()
     val3: str = attr.ib(default=None)
+
+
+@dataclass
+class DataDataclass:
+    val1: str
+    val2: ChildDataclass
+    val3: str = field(default=None)
 
 
 class TestRandomer:
@@ -100,10 +116,17 @@ class TestRandomer:
         "type_,object_",
         [
             (Child, Child(50, ["test"], ("test",), "test", 50)),
+            (ChildDataclass, ChildDataclass(50, ["test"], ("test",), "test", 50)),
             (
                 Data,
                 Data(
                     "test", Child(50, ["test"], ("test",), "test", 50), "test"
+                ),
+            ),
+            (
+                DataDataclass,
+                DataDataclass(
+                    "test", ChildDataclass(50, ["test"], ("test",), "test", 50), "test"
                 ),
             ),
         ],
@@ -118,7 +141,9 @@ class TestRandomer:
         "type_,object_",
         [
             (Child, Child(50, ["test"], tuple(), None)),
+            (ChildDataclass, ChildDataclass(50, ["test"], tuple(), None)),
             (Data, Data("test", Child(50, ["test"], tuple(), None), None)),
+            (DataDataclass, DataDataclass("test", ChildDataclass(50, ["test"], tuple(), None), None)),
         ],
     )
     def test_random_object_required_only(self, random, type_, object_):
@@ -128,6 +153,7 @@ class TestRandomer:
         "type_,ignore,object_",
         [
             (Child, ["value1"], Child(None, ["test"], ("test",), "test", 50)),
+            (ChildDataclass, ["value1"], ChildDataclass(None, ["test"], ("test",), "test", 50)),
             (
                 Data,
                 ["value1", "val1"],
@@ -135,7 +161,15 @@ class TestRandomer:
                     None, Child(None, ["test"], ("test",), "test", 50), "test"
                 ),
             ),
+            (
+                DataDataclass,
+                ["value1", "val1"],
+                DataDataclass(
+                    None, ChildDataclass(None, ["test"], ("test",), "test", 50), "test"
+                ),
+            ),
             (Data, ["value1", "val2"], Data("test", None, "test")),
+            (DataDataclass, ["value1", "val2"], DataDataclass("test", None, "test")),
         ],
     )
     def test_random_object_ignore(self, random, type_, ignore, object_):
@@ -145,11 +179,18 @@ class TestRandomer:
         "type_,ignore,object_",
         [
             (Child, ["value1"], Child(50, None, tuple(), None)),
+            (ChildDataclass, ["value1"], ChildDataclass(50, None, tuple(), None)),
             (Data, ["value1", "val1"], Data("test", None, None)),
+            (DataDataclass, ["value1", "val1"], DataDataclass("test", None, None)),
             (
                 Data,
                 ["value1", "val2"],
                 Data(None, Child(50, None, tuple(), None), None),
+            ),
+            (
+                DataDataclass,
+                ["value1", "val2"],
+                DataDataclass(None, ChildDataclass(50, None, tuple(), None), None),
             ),
         ],
     )
@@ -162,11 +203,18 @@ class TestRandomer:
         "type_,ignore,object_",
         [
             (Child, ["value1"], Child(50, None, tuple(), None)),
+            (ChildDataclass, ["value1"], ChildDataclass(50, None, tuple(), None)),
             (Data, ["value1", "val1"], Data("test", None, None)),
+            (DataDataclass, ["value1", "val1"], DataDataclass("test", None, None)),
             (
                 Data,
                 ["value1", "val2"],
                 Data(None, Child(50, None, tuple(), None), None),
+            ),
+            (
+                DataDataclass,
+                ["value1", "val2"],
+                DataDataclass(None, ChildDataclass(50, None, tuple(), None), None),
             ),
         ],
     )
@@ -186,9 +234,21 @@ class TestRandomer:
                 {"value1": 560},
             ),
             (
+                ChildDataclass,
+                ChildDataclass(560, ["test"], ("test",), "test", 50),
+                {"value1": 560},
+            ),
+            (
                 Data,
                 Data(
                     "rest", Child(560, ["test"], ("test",), "test", 50), "test"
+                ),
+                {"value1": 560, "val1": "rest"},
+            ),
+            (
+                DataDataclass,
+                DataDataclass(
+                    "rest", ChildDataclass(560, ["test"], ("test",), "test", 50), "test"
                 ),
                 {"value1": 560, "val1": "rest"},
             ),
@@ -203,11 +263,22 @@ class TestRandomer:
             value1: typing.Union[int, str] = attr.ib()
             value2: typing.Optional[str] = attr.ib()
 
+        @dataclass
+        class NewObjDataclass:
+            value1: typing.Union[int, str]
+            value2: typing.Optional[str]
+
         for _ in range(20):
             assert converter.unstructure(random.object(NewObj)).get(
                 "value1"
             ) in ["test", 50]
             assert converter.unstructure(random.object(NewObj)).get(
+                "value2"
+            ) in ["test", None]
+            assert convclass.unstructure(random.object(NewObjDataclass)).get(
+                "value1"
+            ) in ["test", 50]
+            assert convclass.unstructure(random.object(NewObjDataclass)).get(
                 "value2"
             ) in ["test", None]
 
@@ -219,9 +290,20 @@ class TestRandomer:
             (Child, ["value3"], {"value3": ("test",)}),
             (Child, ["value4"], {"value4": "test"}),
             (Child, ["value5"], {"value5": 50}),
+            (ChildDataclass, ["value1"], {"value1": 50}),
+            (ChildDataclass, ["value2"], {"value2": ["test"]}),
+            (ChildDataclass, ["value3"], {"value3": ("test",)}),
+            (ChildDataclass, ["value4"], {"value4": "test"}),
+            (ChildDataclass, ["value5"], {"value5": 50}),
             (Data, ["val1"], {"val1": "test"}),
             (
                 Data,
+                ["val1", "value2"],
+                {"val1": "test", "val2": {"value2": ["test"]}},
+            ),
+            (DataDataclass, ["val1"], {"val1": "test"}),
+            (
+                DataDataclass,
                 ["val1", "value2"],
                 {"val1": "test", "val2": {"value2": ["test"]}},
             ),
@@ -229,7 +311,10 @@ class TestRandomer:
     )
     def test_random_partial(self, random, type_, use, exp_data):
         data = random.partial(type_, use=use)
-        assert converter.unstructure(data) == exp_data
+        if is_dataclass(data):
+            assert convclass.unstructure(data) == exp_data
+        else:
+            assert converter.unstructure(data) == exp_data
 
     def test_random_partial_missing_type(self, random):
         assert random.partial(dict) is None
@@ -244,7 +329,19 @@ class TestRandomer:
                 {"value1": 50, "value2": "rest"},
             ),
             (
+                ChildDataclass,
+                ["value1"],
+                {"value2": "rest"},
+                {"value1": 50, "value2": "rest"},
+            ),
+            (
                 Data,
+                ["val1"],
+                {"value2": "rest"},
+                {"val1": "test", "val2": {"value2": "rest"}},
+            ),
+            (
+                DataDataclass,
                 ["val1"],
                 {"value2": "rest"},
                 {"val1": "test", "val2": {"value2": "rest"}},
@@ -255,7 +352,10 @@ class TestRandomer:
         self, random, type_, use, params, exp_data
     ):
         data = random.partial(type_, use=use, **params)
-        assert converter.unstructure(data) == exp_data
+        if is_dataclass(data):
+            assert convclass.unstructure(data) == exp_data
+        else:
+            assert converter.unstructure(data) == exp_data
 
     @pytest.mark.parametrize(
         "use,exp_data",
@@ -288,13 +388,52 @@ class TestRandomer:
         data = random.partial(Parent, use=use)
         assert converter.unstructure(data) == exp_data
 
+    @pytest.mark.parametrize(
+        "use,exp_data",
+        [
+            (["value4"], {"value4": "test"}),
+            (
+                ["value3", "value6"],
+                {"value5": {"value3": {"data": 120}}, "value6": {"data": 120}},
+            ),
+        ],
+    )
+    def test_random_partial_dataclasses_custom_hook(self, random, use, exp_data):
+        @dataclass
+        class Child2:
+            value1: int
+
+        @dataclass
+        class Child1:
+            value2: int
+            value3: Child2
+
+        @dataclass
+        class Parent:
+            value4: str
+            value5: Child1
+            value6: Child2
+
+        random.add_type(Child2, lambda: {"data": 120})
+
+        data = random.partial(Parent, use=use)
+        assert convclass.unstructure(data) == exp_data
+
     def test_random_partial_union(self, random):
         @attr.s
         class NewObj:
             value1: typing.Union[int, str] = attr.ib()
             value2: int = attr.ib()
 
+        @dataclass
+        class NewObjDataclass:
+            value1: typing.Union[int, str]
+            value2: int
+
         for _ in range(10):
             assert converter.unstructure(
                 random.partial(NewObj, use=["value1"])
+            ) in [{"value1": 50}, {"value1": "test"}]
+            assert convclass.unstructure(
+                random.partial(NewObjDataclass, use=["value1"])
             ) in [{"value1": 50}, {"value1": "test"}]

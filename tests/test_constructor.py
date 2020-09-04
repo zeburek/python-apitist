@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, MISSING
 
 import pytest
 
@@ -9,7 +9,7 @@ from apitist.constructor import (
     NothingDict,
     _structure_date_time,
     _subclass,
-    _unstructure_date_time, ConverterType,
+    _unstructure_date_time, ConverterType, MissingDict,
 )
 
 
@@ -88,6 +88,14 @@ class TestConstructor:
     )
     def test_nothing_dict_set_item(self, value, result):
         dict_ = NothingDict()
+        dict_["test"] = value
+        assert bool(dict_) == result
+
+    @pytest.mark.parametrize(
+        "value,result", [("test", True), (0, True), (MISSING, False)]
+    )
+    def test_missing_dict_set_item(self, value, result):
+        dict_ = MissingDict()
         dict_["test"] = value
         assert bool(dict_) == result
 

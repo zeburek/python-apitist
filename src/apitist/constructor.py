@@ -1,3 +1,4 @@
+from dataclasses import MISSING
 from enum import Enum
 
 import attr
@@ -108,6 +109,21 @@ class NothingDict(dict):
         super().__setitem__(key, value)
 
 
+class MissingDict(dict):
+    """
+    Default dict for unstructuring
+
+    It is used for unstructuring Type with ignoring some fields.
+    If given field is :class:`dataclasses.MISSING` - it would not be unstructured in
+    dict.
+    """
+
+    def __setitem__(self, key, value):
+        if value == MISSING:
+            return
+        super().__setitem__(key, value)
+
+
 def Converter(converter_type: ConverterType = ConverterType.ATTRS):
     if converter_type == ConverterType.ATTRS:
         return AttrsConverter()
@@ -118,3 +134,7 @@ def Converter(converter_type: ConverterType = ConverterType.ATTRS):
 converter = Converter()
 converter.set_dict_factory(NothingDict)
 converter.register_additional_hooks()
+
+convclass = Converter(ConverterType.DATACLASS)
+convclass.set_dict_factory(MissingDict)
+convclass.register_additional_hooks()

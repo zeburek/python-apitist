@@ -1,6 +1,7 @@
 import inspect
 import random as rnd
 import typing
+from dataclasses import is_dataclass, fields, MISSING
 
 import attr
 
@@ -136,6 +137,35 @@ class Randomer:
                 "Generating random data for attrs type %s", data
             )
             return data
+        elif is_dataclass(t):
+            data = {}
+            for field in fields(t):
+                f_name = field.name
+                has_default = field.default is not MISSING or field.default_factory is not MISSING
+                if f_name in set_params:
+                    data[f_name] = set_params[f_name]
+                    continue
+                if (
+                        (f_name in ignore and inverse is False)
+                        or (ignore and f_name not in ignore and inverse is True)
+                        or (required_only and has_default)
+                ):
+                    data[f_name] = None
+                    if has_default:
+                        data[f_name] = field.default if field.default != MISSING else field.default_factory()
+                    continue
+                data[f_name] = self.random_object(
+                    field.type,
+                    required_only=required_only,
+                    ignore=ignore,
+                    inverse=inverse,
+                    **set_params,
+                )
+            data = t(**data)
+            Logging.logger.debug(
+                "Generating random data for dataclass type %s", data
+            )
+            return data
         elif is_union_type(t) and has_args(t):
             return self.random_object(
                 rnd.choice(t.__args__),
@@ -176,34 +206,58 @@ class Randomer:
         """
         if t in self.available_hooks:
             return self.run_hook(t, use=use, **set_params)
-        elif "__attrs_attrs__" in dir(t):
+        elif is_attrs_class(t):
             data = {}
             for field in attr.fields(t):
                 key = field.name
-
                 if set_params and key in set_params:
                     data[key] = set_params[key]
                     continue
-
                 if (
                     use
                     and key not in use
                     and (
-                        "__attrs_attrs__" not in dir(field.type)
+                        not is_attrs_class(field.type)
                         or (
-                            "__attrs_attrs__" in dir(field.type)
+                            is_attrs_class(field.type)
                             and field.type in self.available_hooks
                         )
                     )
                 ):
                     data[key] = attr.NOTHING
                     continue
-
                 data[key] = self.random_partial(field.type, use, **set_params)
 
             if not all(v == attr.NOTHING for _, v in data.items()):
                 return t(**data)
             return attr.NOTHING
+
+        elif is_dataclass(t):
+            data = {}
+            for field in fields(t):
+                key = field.name
+                if set_params and key in set_params:
+                    data[key] = set_params[key]
+                    continue
+                if (
+                    use
+                    and key not in use
+                    and (
+                        not is_dataclass(field.type)
+                        or (
+                            is_dataclass(field.type)
+                            and field.type in self.available_hooks
+                        )
+                    )
+                ):
+                    data[key] = MISSING
+                    continue
+
+                data[key] = self.random_partial(field.type, use, **set_params)
+
+            if not all(v == MISSING for _, v in data.items()):
+                return t(**data)
+            return MISSING
 
         elif is_union_type(t) and has_args(t):
             return self.random_partial(
