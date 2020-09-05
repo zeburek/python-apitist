@@ -114,8 +114,8 @@ class MissingDict(dict):
     Default dict for unstructuring
 
     It is used for unstructuring Type with ignoring some fields.
-    If given field is :class:`dataclasses.MISSING` - it would not be unstructured in
-    dict.
+    If given field is :class:`dataclasses.MISSING` -
+    it would not be unstructured in dict.
     """
 
     def __setitem__(self, key, value):

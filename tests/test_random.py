@@ -6,7 +6,7 @@ import pytest
 
 import attr
 
-from apitist.constructor import converter, convclass
+from apitist.constructor import convclass, converter
 
 
 class TypeStr(str):
@@ -20,6 +20,7 @@ class Child:
     value3: typing.Tuple[str] = attr.ib(default=tuple())
     value4: str = attr.ib(default=None)
     value5: typing.Union[int] = attr.ib(default=None)
+
 
 @dataclass
 class ChildDataclass:
@@ -116,7 +117,10 @@ class TestRandomer:
         "type_,object_",
         [
             (Child, Child(50, ["test"], ("test",), "test", 50)),
-            (ChildDataclass, ChildDataclass(50, ["test"], ("test",), "test", 50)),
+            (
+                ChildDataclass,
+                ChildDataclass(50, ["test"], ("test",), "test", 50),
+            ),
             (
                 Data,
                 Data(
@@ -126,7 +130,9 @@ class TestRandomer:
             (
                 DataDataclass,
                 DataDataclass(
-                    "test", ChildDataclass(50, ["test"], ("test",), "test", 50), "test"
+                    "test",
+                    ChildDataclass(50, ["test"], ("test",), "test", 50),
+                    "test",
                 ),
             ),
         ],
@@ -143,7 +149,12 @@ class TestRandomer:
             (Child, Child(50, ["test"], tuple(), None)),
             (ChildDataclass, ChildDataclass(50, ["test"], tuple(), None)),
             (Data, Data("test", Child(50, ["test"], tuple(), None), None)),
-            (DataDataclass, DataDataclass("test", ChildDataclass(50, ["test"], tuple(), None), None)),
+            (
+                DataDataclass,
+                DataDataclass(
+                    "test", ChildDataclass(50, ["test"], tuple(), None), None
+                ),
+            ),
         ],
     )
     def test_random_object_required_only(self, random, type_, object_):
@@ -153,7 +164,11 @@ class TestRandomer:
         "type_,ignore,object_",
         [
             (Child, ["value1"], Child(None, ["test"], ("test",), "test", 50)),
-            (ChildDataclass, ["value1"], ChildDataclass(None, ["test"], ("test",), "test", 50)),
+            (
+                ChildDataclass,
+                ["value1"],
+                ChildDataclass(None, ["test"], ("test",), "test", 50),
+            ),
             (
                 Data,
                 ["value1", "val1"],
@@ -165,11 +180,17 @@ class TestRandomer:
                 DataDataclass,
                 ["value1", "val1"],
                 DataDataclass(
-                    None, ChildDataclass(None, ["test"], ("test",), "test", 50), "test"
+                    None,
+                    ChildDataclass(None, ["test"], ("test",), "test", 50),
+                    "test",
                 ),
             ),
             (Data, ["value1", "val2"], Data("test", None, "test")),
-            (DataDataclass, ["value1", "val2"], DataDataclass("test", None, "test")),
+            (
+                DataDataclass,
+                ["value1", "val2"],
+                DataDataclass("test", None, "test"),
+            ),
         ],
     )
     def test_random_object_ignore(self, random, type_, ignore, object_):
@@ -179,9 +200,17 @@ class TestRandomer:
         "type_,ignore,object_",
         [
             (Child, ["value1"], Child(50, None, tuple(), None)),
-            (ChildDataclass, ["value1"], ChildDataclass(50, None, tuple(), None)),
+            (
+                ChildDataclass,
+                ["value1"],
+                ChildDataclass(50, None, tuple(), None),
+            ),
             (Data, ["value1", "val1"], Data("test", None, None)),
-            (DataDataclass, ["value1", "val1"], DataDataclass("test", None, None)),
+            (
+                DataDataclass,
+                ["value1", "val1"],
+                DataDataclass("test", None, None),
+            ),
             (
                 Data,
                 ["value1", "val2"],
@@ -190,7 +219,9 @@ class TestRandomer:
             (
                 DataDataclass,
                 ["value1", "val2"],
-                DataDataclass(None, ChildDataclass(50, None, tuple(), None), None),
+                DataDataclass(
+                    None, ChildDataclass(50, None, tuple(), None), None
+                ),
             ),
         ],
     )
@@ -203,9 +234,17 @@ class TestRandomer:
         "type_,ignore,object_",
         [
             (Child, ["value1"], Child(50, None, tuple(), None)),
-            (ChildDataclass, ["value1"], ChildDataclass(50, None, tuple(), None)),
+            (
+                ChildDataclass,
+                ["value1"],
+                ChildDataclass(50, None, tuple(), None),
+            ),
             (Data, ["value1", "val1"], Data("test", None, None)),
-            (DataDataclass, ["value1", "val1"], DataDataclass("test", None, None)),
+            (
+                DataDataclass,
+                ["value1", "val1"],
+                DataDataclass("test", None, None),
+            ),
             (
                 Data,
                 ["value1", "val2"],
@@ -214,7 +253,9 @@ class TestRandomer:
             (
                 DataDataclass,
                 ["value1", "val2"],
-                DataDataclass(None, ChildDataclass(50, None, tuple(), None), None),
+                DataDataclass(
+                    None, ChildDataclass(50, None, tuple(), None), None
+                ),
             ),
         ],
     )
@@ -248,7 +289,9 @@ class TestRandomer:
             (
                 DataDataclass,
                 DataDataclass(
-                    "rest", ChildDataclass(560, ["test"], ("test",), "test", 50), "test"
+                    "rest",
+                    ChildDataclass(560, ["test"], ("test",), "test", 50),
+                    "test",
                 ),
                 {"value1": 560, "val1": "rest"},
             ),
@@ -398,7 +441,9 @@ class TestRandomer:
             ),
         ],
     )
-    def test_random_partial_dataclasses_custom_hook(self, random, use, exp_data):
+    def test_random_partial_dataclasses_custom_hook(
+        self, random, use, exp_data
+    ):
         @dataclass
         class Child2:
             value1: int

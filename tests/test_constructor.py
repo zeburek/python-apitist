@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field, MISSING
+from dataclasses import MISSING, dataclass, field
 
 import pytest
 
@@ -6,10 +6,12 @@ import attr
 import pendulum
 
 from apitist.constructor import (
+    ConverterType,
+    MissingDict,
     NothingDict,
     _structure_date_time,
     _subclass,
-    _unstructure_date_time, ConverterType, MissingDict,
+    _unstructure_date_time,
 )
 
 
@@ -77,7 +79,11 @@ class TestConstructor:
 
     def test_converter_additional_hooks(self, converter):
         data = {"test": TypeStr("test"), "example": "2019-03-06T14:58:10"}
-        _type = ExampleData if converter._converter_type == ConverterType.ATTRS else ExampleDataclass
+        _type = (
+            ExampleData
+            if converter._converter_type == ConverterType.ATTRS
+            else ExampleDataclass
+        )
         with pytest.raises(ValueError):
             converter.structure(data, _type)
         converter.register_additional_hooks()

@@ -1,7 +1,7 @@
 import inspect
 import random as rnd
 import typing
-from dataclasses import is_dataclass, fields, MISSING
+from dataclasses import MISSING, fields, is_dataclass
 
 import attr
 
@@ -141,18 +141,25 @@ class Randomer:
             data = {}
             for field in fields(t):
                 f_name = field.name
-                has_default = field.default is not MISSING or field.default_factory is not MISSING
+                has_default = (
+                    field.default is not MISSING
+                    or field.default_factory is not MISSING
+                )
                 if f_name in set_params:
                     data[f_name] = set_params[f_name]
                     continue
                 if (
-                        (f_name in ignore and inverse is False)
-                        or (ignore and f_name not in ignore and inverse is True)
-                        or (required_only and has_default)
+                    (f_name in ignore and inverse is False)
+                    or (ignore and f_name not in ignore and inverse is True)
+                    or (required_only and has_default)
                 ):
                     data[f_name] = None
                     if has_default:
-                        data[f_name] = field.default if field.default != MISSING else field.default_factory()
+                        data[f_name] = (
+                            field.default
+                            if field.default != MISSING
+                            else field.default_factory()
+                        )
                     continue
                 data[f_name] = self.random_object(
                     field.type,

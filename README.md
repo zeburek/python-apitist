@@ -28,9 +28,9 @@ pip install apitist
   - ResponseInfoLoggingHook - logs response content with level INFO
   - RequestAttrsConverterHook - converts attrs class in `data` field into json
   - RequestDataclassConverterHook - converts dataclass class in `data` field into json
-  - ResponseAttrsConverterHook - adds `structure(type)` function to `requests.Response` class, which will structure 
+  - ResponseAttrsConverterHook - adds `structure(type)` function to `requests.Response` class, which will structure
   response according to attrs class given to it
-  - ResponseDataclassConverterHook - adds `structure(type)` function to `requests.Response` class, which will structure 
+  - ResponseDataclassConverterHook - adds `structure(type)` function to `requests.Response` class, which will structure
   response according to dataclass class given to it
 
 ### Example usage

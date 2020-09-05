@@ -136,7 +136,9 @@ class TestHooks:
 
     def test_request_converter_dataclass_class(self, session):
         session.add_hook(RequestDataclassConverterHook)
-        res = session.get("http://httpbin.org/get", data=ExampleDataclass("test"))
+        res = session.get(
+            "http://httpbin.org/get", data=ExampleDataclass("test")
+        )
         assert res.request.body == json.dumps({"test": "test"}).encode("utf-8")
 
     def test_request_converter_non_dataclass(self, session):
@@ -146,8 +148,17 @@ class TestHooks:
 
     def test_response_converter_adding_function_dataclass(self, session):
         session.add_hook(ResponseDataclassConverterHook)
-        res = session.get("http://httpbin.org/get")
+        res = session.get("http://httpbin.org/get").vr()
         assert getattr(res, "structure")
+        assert getattr(res, "verify_response")
+        assert getattr(res, "vr")
+
+    def test_response_verify_response_success(self, session):
+        session.get("http://httpbin.org/get").vr([200, 201])
+
+    def test_response_verify_response_error(self, session):
+        with pytest.raises(ValueError):
+            session.get("http://httpbin.org/get").vr(400)
 
     def test_response_converter_correct_dataclass_type(self, session):
         session.add_hook(ResponseDataclassConverterHook)

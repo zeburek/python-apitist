@@ -1,5 +1,6 @@
+import inspect
 from abc import ABC
-from typing import List, Type, Union
+from typing import List, Type, TypeVar, Union
 
 from requests import PreparedRequest, Request, Response
 from requests import Session as OldSession
@@ -23,6 +24,40 @@ class PreparedRequestHook(SessionHook):
 
 class ResponseHook(SessionHook):
     def run(self, response: Response) -> Response:
+        ...
+
+
+DataType = TypeVar("DataType")
+
+
+class ApitistResponse(Response):
+    data: DataType
+
+    def __init__(self, response: Response):
+        self.__dict__ = response.__dict__
+
+    def verify_response(
+        self, ok_status: Union[int, List[int]] = 200
+    ) -> "ApitistResponse":
+        func = inspect.stack()[2][3]
+        if isinstance(ok_status, int):
+            ok_status = [ok_status]
+        if self.status_code not in ok_status:
+            raise ValueError(
+                f"Verified response: function {func} failed: "
+                f"server responded {self.status_code} "
+                f"with data: {self.content}"
+            )
+        else:
+            Logging.logger.info(
+                f"Verified response: function {func} code {self.status_code}"
+            )
+        return self
+
+    def vr(self, ok_status: Union[int, List[int]] = 200) -> "ApitistResponse":
+        return self.verify_response(ok_status=ok_status)
+
+    def structure(self, t: Type[DataType]) -> "ApitistResponse":
         ...
 
 
@@ -67,7 +102,7 @@ class Session(OldSession):
         array: List[
             Type[Union[RequestHook, PreparedRequestHook, ResponseHook]]
         ],
-        data: Union[Request, PreparedRequest, Response],
+        data: Union[Request, PreparedRequest, Response, ApitistResponse],
     ):
         for hook in array:
             data = hook().run(data)
@@ -91,7 +126,7 @@ class Session(OldSession):
         verify=None,
         cert=None,
         json=None,
-    ):
+    ) -> ApitistResponse:
         """Constructs a :class:`Request <Request>`, prepares it and sends it.
         Returns :class:`Response <Response>` object.
 
@@ -155,7 +190,7 @@ class Session(OldSession):
         # Send the request.
         send_kwargs = {"timeout": timeout, "allow_redirects": allow_redirects}
         send_kwargs.update(settings)
-        resp = self.send(prep, **send_kwargs)
+        resp = ApitistResponse(self.send(prep, **send_kwargs))
         resp = self._run_hooks(self.response_hooks, resp)
 
         return resp

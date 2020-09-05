@@ -7,7 +7,7 @@ from requests import PreparedRequest, Request, Response
 
 from apitist.utils import is_attrs_class
 
-from .constructor import converter, convclass
+from .constructor import convclass, converter
 from .logging import Logging
 from .requests import PreparedRequestHook, RequestHook, ResponseHook
 
