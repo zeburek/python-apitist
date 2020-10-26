@@ -1,4 +1,5 @@
 from dataclasses import MISSING, dataclass, field
+from typing import List
 
 import pytest
 
@@ -88,6 +89,16 @@ class TestConstructor:
             converter.structure(data, _type)
         converter.register_additional_hooks()
         assert converter.structure(data, _type)
+
+    def test_converter_list(self, converter):
+        data = [{"test": TypeStr("test"), "example": "2019-03-06T14:58:10"}]
+        _type = (
+            ExampleData
+            if converter._converter_type == ConverterType.ATTRS
+            else ExampleDataclass
+        )
+        converter.register_additional_hooks()
+        assert converter.structure(data, List[_type])
 
     @pytest.mark.parametrize(
         "value,result", [("test", True), (0, True), (attr.NOTHING, False)]

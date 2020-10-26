@@ -86,20 +86,26 @@ class RequestDataclassConverterHook(RequestHook):
 RequestConverterHook = RequestAttrsConverterHook
 
 
+def throw_response_missmatch(fields, res: Response, exp):
+    raise TypeError(
+        f"Got miss-matched parameters in dicts. "
+        f"Info about first level:"
+        f"\n\tExpect: {sorted(fields)}"
+        f"\n\tActual: {sorted(dict(res.json()).keys())}"
+        f"\n\nOriginal exception: {exp}"
+    )
+
+
 class ResponseAttrsConverterHook(ResponseHook):
     def run(self, response: Response) -> Response:
         def func(self, t: Type) -> Response:
             try:
                 self.data = converter.structure(self.json(), t)
             except TypeError as e:
-                fields = attr.fields_dict(t)
-                raise TypeError(
-                    f"Got miss-matched parameters in dicts. "
-                    f"Info about first level:"
-                    f"\n\tExpect: {sorted(fields)}"
-                    f"\n\tActual: {sorted(dict(self.json()).keys())}"
-                    f"\n\nOriginal exception: {e}"
-                )
+                if is_attrs_class(t):
+                    fields = attr.fields_dict(t)
+                    throw_response_missmatch(fields, self, e)
+                raise e
             return self
 
         response.structure = types.MethodType(func, response)
@@ -112,14 +118,10 @@ class ResponseDataclassConverterHook(ResponseHook):
             try:
                 self.data = convclass.structure(self.json(), t)
             except TypeError as e:
-                fields = dataclasses.fields(t)
-                raise TypeError(
-                    f"Got miss-matched parameters in dicts. "
-                    f"Info about first level:"
-                    f"\n\tExpect: {sorted(fields)}"
-                    f"\n\tActual: {sorted(dict(self.json()).keys())}"
-                    f"\n\nOriginal exception: {e}"
-                )
+                if dataclasses.is_dataclass(t):
+                    fields = dataclasses.fields(t)
+                    throw_response_missmatch(fields, self, e)
+                raise e
             return self
 
         response.structure = types.MethodType(func, response)
