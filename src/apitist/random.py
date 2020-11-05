@@ -1,5 +1,6 @@
 import inspect
 import typing
+import warnings
 
 import attr
 
@@ -8,6 +9,8 @@ from apitist.utils import has_args, is_attrs_class, is_sequence, is_tuple
 from .logging import Logging
 
 T = typing.TypeVar("T")
+
+warnings.warn("Please use apitist (https://pypi.org/project/apitist) package now", DeprecationWarning)
 
 
 class Randomer:

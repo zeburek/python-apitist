@@ -1,8 +1,12 @@
+import warnings
+
 import attr
 import cattr
 import pendulum
 
 from apitist.utils import _subclass
+
+warnings.warn("Please use apitist (https://pypi.org/project/apitist) package now", DeprecationWarning)
 
 
 def _structure_date_time(isostring, _):

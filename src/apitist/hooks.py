@@ -1,4 +1,5 @@
 import types
+import warnings
 from typing import Type
 
 import attr
@@ -9,6 +10,8 @@ from apitist.utils import is_attrs_class
 from .constructor import converter
 from .logging import Logging
 from .requests import PreparedRequestHook, RequestHook, ResponseHook
+
+warnings.warn("Please use apitist (https://pypi.org/project/apitist) package now", DeprecationWarning)
 
 
 class RequestDebugLoggingHook(RequestHook):

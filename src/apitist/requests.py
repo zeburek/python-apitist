@@ -1,3 +1,4 @@
+import warnings
 from abc import ABC
 from typing import List, Type, Union
 
@@ -5,6 +6,8 @@ from requests import PreparedRequest, Request, Response
 from requests import Session as OldSession
 
 from apitist.logging import Logging
+
+warnings.warn("Please use apitist (https://pypi.org/project/apitist) package now", DeprecationWarning)
 
 
 class SessionHook(ABC):
