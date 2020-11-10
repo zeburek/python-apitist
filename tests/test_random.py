@@ -7,6 +7,39 @@ import pytest
 import attr
 
 from apitist.constructor import convclass, converter
+from apitist.random import (
+    BBAN,
+    IBAN,
+    SWIFT8,
+    SWIFT11,
+    URI,
+    Address,
+    CarNumber,
+    CompanyName,
+    CompanySuffix,
+    Country,
+    CountryCode,
+    CreditCardExpire,
+    CreditCardNumber,
+    CreditCardProvider,
+    CreditCardSecurityCode,
+    Date,
+    Email,
+    FileName,
+    FirstName,
+    Ipv4,
+    Ipv6,
+    Job,
+    LastName,
+    MacAddress,
+    Paragraph,
+    Patronymic,
+    PhoneNumber,
+    PostCode,
+    StreetAddress,
+    UserAgent,
+    Username,
+)
 
 
 class TypeStr(str):
@@ -482,3 +515,76 @@ class TestRandomer:
             assert convclass.unstructure(
                 random.partial(NewObjDataclass, use=["value1"])
             ) in [{"value1": 50}, {"value1": "test"}]
+
+    def test_predefined_types(self, random):
+        @attr.s(auto_attribs=True)
+        class NewObj:
+            address: Address
+            country: Country
+            countrycode: CountryCode
+            postcode: PostCode
+            streetaddress: StreetAddress
+            carnumber: CarNumber
+            bban: BBAN
+            iban: IBAN
+            swift11: SWIFT11
+            swift8: SWIFT8
+            creditcardexpire: CreditCardExpire
+            creditcardnumber: CreditCardNumber
+            creditcardprovider: CreditCardProvider
+            creditcardsecuritycode: CreditCardSecurityCode
+            companyname: CompanyName
+            companysuffix: CompanySuffix
+            filename: FileName
+            ipv4: Ipv4
+            ipv6: Ipv6
+            macaddress: MacAddress
+            useragent: UserAgent
+            uri: URI
+            email: Email
+            username: Username
+            firstname: FirstName
+            lastname: LastName
+            patronymic: Patronymic
+            phonenumber: PhoneNumber
+            job: Job
+            paragraph: Paragraph
+            date: Date
+
+        @dataclass
+        class NewObjDataclass:
+            address: Address
+            country: Country
+            countrycode: CountryCode
+            postcode: PostCode
+            streetaddress: StreetAddress
+            carnumber: CarNumber
+            bban: BBAN
+            iban: IBAN
+            swift11: SWIFT11
+            swift8: SWIFT8
+            creditcardexpire: CreditCardExpire
+            creditcardnumber: CreditCardNumber
+            creditcardprovider: CreditCardProvider
+            creditcardsecuritycode: CreditCardSecurityCode
+            companyname: CompanyName
+            companysuffix: CompanySuffix
+            filename: FileName
+            ipv4: Ipv4
+            ipv6: Ipv6
+            macaddress: MacAddress
+            useragent: UserAgent
+            uri: URI
+            email: Email
+            username: Username
+            firstname: FirstName
+            lastname: LastName
+            patronymic: Patronymic
+            phonenumber: PhoneNumber
+            job: Job
+            paragraph: Paragraph
+            date: Date
+
+        random.add_predefined(locale="ru-RU")
+        assert random.object(NewObj)
+        assert random.object(NewObjDataclass)
