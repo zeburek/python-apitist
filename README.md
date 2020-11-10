@@ -18,6 +18,11 @@ Run the following command in your command line::
 pip install apitist
 ```
 
+If you want to use predefined random types please install additional requirements:
+```bash
+pip install -e apitist[random]
+```
+
 ## Default hooks
 
   - RequestDebugLoggingHook - logs request content with level DEBUG
