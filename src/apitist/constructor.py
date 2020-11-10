@@ -118,12 +118,18 @@ class MissingDict(dict):
 
 class AttrsConverter(_Converter, cattr.Converter):
     _converter_type = ConverterType.ATTRS
-    _dict_factory = NothingDict
+
+    def __init__(self):
+        super().__init__()
+        self.set_dict_factory(NothingDict)
 
 
 class DataclassConverter(_Converter, convclasses.Converter):
     _converter_type = ConverterType.DATACLASS
-    _dict_factory = MissingDict
+
+    def __init__(self):
+        super().__init__()
+        self.set_dict_factory(MissingDict)
 
 
 def Converter(converter_type: ConverterType = ConverterType.ATTRS):
