@@ -18,6 +18,43 @@ from .logging import Logging
 T = typing.TypeVar("T")
 
 
+def str_type(name: str):
+    return type(name, (str,), {})
+
+
+Address = str_type("Address")
+Country = str_type("Country")
+CountryCode = str_type("CountryCode")
+PostCode = str_type("PostCode")
+StreetAddress = str_type("StreetAddress")
+CarNumber = str_type("CarNumber")
+BBAN = str_type("BBAN")
+IBAN = str_type("IBAN")
+SWIFT11 = str_type("SWIFT11")
+SWIFT8 = str_type("SWIFT8")
+CreditCardExpire = str_type("CreditCardExpire")
+CreditCardNumber = str_type("CreditCardNumber")
+CreditCardProvider = str_type("CreditCardProvider")
+CreditCardSecurityCode = str_type("CreditCardSecurityCode")
+CompanyName = str_type("CompanyName")
+CompanySuffix = str_type("CompanySuffix")
+FileName = str_type("FileName")
+Ipv4 = str_type("Ipv4")
+Ipv6 = str_type("Ipv6")
+MacAddress = str_type("MacAddress")
+UserAgent = str_type("UserAgent")
+URI = str_type("URI")
+Email = str_type("Email")
+Username = str_type("Username")
+FirstName = str_type("FirstName")
+LastName = str_type("LastName")
+Patronymic = str_type("Patronymic")
+PhoneNumber = str_type("PhoneNumber")
+Job = str_type("Job")
+Paragraph = str_type("Paragraph")
+Date = str_type("Date")
+
+
 class Randomer:
     _types_dict = None
 
@@ -69,6 +106,57 @@ class Randomer:
         """
         Logging.logger.debug("Registering list of types: %s", types_dict)
         self._types_dict.update(types_dict)
+
+    def add_predefined(self, **kwargs):
+        try:
+            import faker
+        except ImportError:
+            raise ImportError(
+                "Please pre-install Faker:"
+                "\n\tpip install -e 'apitist[random]'"
+                "\n\tor"
+                "\n\tpip install faker"
+            )
+        fake = faker.Faker(**kwargs)
+        types = {
+            str: fake.pystr,
+            int: fake.pyint,
+            float: fake.pyfloat,
+            bool: fake.pybool,
+            list: fake.pylist,
+            Address: fake.address,
+            Country: fake.country,
+            CountryCode: fake.country_code,
+            PostCode: fake.postcode,
+            StreetAddress: fake.street_address,
+            CarNumber: fake.license_plate,
+            BBAN: fake.bban,
+            IBAN: fake.iban,
+            SWIFT11: fake.swift11,
+            SWIFT8: fake.swift8,
+            CreditCardExpire: fake.credit_card_expire,
+            CreditCardNumber: fake.credit_card_number,
+            CreditCardProvider: fake.credit_card_provider,
+            CreditCardSecurityCode: fake.credit_card_security_code,
+            CompanyName: fake.company,
+            CompanySuffix: fake.company_suffix,
+            FileName: fake.file_name,
+            Ipv4: fake.ipv4,
+            Ipv6: fake.ipv6,
+            MacAddress: fake.mac_address,
+            UserAgent: fake.user_agent,
+            URI: fake.uri,
+            Email: fake.email,
+            Username: fake.user_name,
+            FirstName: fake.first_name,
+            LastName: fake.last_name,
+            Patronymic: fake.first_name_male,
+            PhoneNumber: fake.phone_number,
+            Job: fake.job,
+            Paragraph: fake.paragraph,
+            Date: fake.date,
+        }
+        self.add_types(types)
 
     def random_object(
         self,
