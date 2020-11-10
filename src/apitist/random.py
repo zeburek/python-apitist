@@ -110,7 +110,7 @@ class Randomer:
     def add_predefined(self, **kwargs):
         try:
             import faker
-        except ImportError:
+        except ModuleNotFoundError:
             raise ImportError(
                 "Please pre-install Faker:"
                 "\n\tpip install -e 'apitist[random]'"
