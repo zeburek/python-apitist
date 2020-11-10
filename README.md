@@ -36,8 +36,8 @@ pip install apitist
 ### Example usage
 
 ```python
-from apitist.hooks import PrepRequestInfoLoggingHook, ResponseInfoLoggingHook
-from apitist.requests import session
+from apitist import PrepRequestInfoLoggingHook, ResponseInfoLoggingHook
+from apitist import session
 
 
 s = session()
@@ -54,7 +54,7 @@ s.post("https://httpbin.org/post", params={"q": "test"})
 ```python
 from requests import Request, PreparedRequest, Response
 
-from apitist.requests import session, RequestHook, PreparedRequestHook, ResponseHook
+from apitist import session, RequestHook, PreparedRequestHook, ResponseHook
 
 s = session()
 
@@ -90,9 +90,12 @@ s.get("https://ya.ru", params={"q": "test"})
 import attr
 import typing
 
-from apitist.constructor import converter
-from apitist.hooks import RequestConverterHook, ResponseConverterHook
-from apitist.requests import session
+from apitist import (
+  converter,
+  RequestConverterHook,
+  ResponseConverterHook,
+  session,
+)
 
 
 class ExampleType:
@@ -143,7 +146,7 @@ print(res.structured.json.test.test) # test
 First of all create an instance of random class:
 
 ```python
-from apitist.random import Randomer
+from apitist import Randomer
 rand = Randomer()
 ```
 
@@ -209,3 +212,51 @@ By this you could create different data for different `str` fields.
 
 Also, using with `RequestConverterHook` and `ResponseConverterHook`
 you could easily create random json objects which would be send to server.
+
+## Predefined random types
+
+```python
+from apitist import Randomer
+from apitist.random import Username, FirstName, LastName, Date
+from dataclasses import dataclass
+
+
+@dataclass
+class LoginModel:
+    username: Username
+    password: str
+
+
+@dataclass
+class BookingDates:
+    checkin: Date
+    checkout: Date
+
+
+@dataclass
+class BookingModel:
+    firstname: FirstName
+    lastname: LastName
+    totalprice: int
+    depositpaid: bool
+    bookingdates: BookingDates
+    additionalneeds: str
+
+
+rand = Randomer()
+rand.add_predefined(locale="es-ES")
+rand.object(LoginModel)
+# LoginModel(
+#   username='wfeliu',
+#   password='VjHoHtLSjdoxXhtitaXU'
+# )
+rand.object(BookingModel)
+# BookingModel(
+#   firstname='Pedro',
+#   lastname='Luz',
+#   totalprice=931,
+#   depositpaid=True,
+#   bookingdates=BookingDates(checkin='1972-08-29', checkout='1971-05-19'),
+#   additionalneeds='EFggHSpnzRSJATKtUmOm'
+# )
+```

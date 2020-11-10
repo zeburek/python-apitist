@@ -1,7 +1,5 @@
 import logging
 
-import apitist
-
 
 class Logging:
 
@@ -29,7 +27,7 @@ class Logging:
             logging.getLogger("requests").setLevel(logging.WARNING)
             logging.getLogger("urllib3").setLevel(logging.WARNING)
 
-        Logging.logger = logging.getLogger(apitist.dist_name)
+        Logging.logger = logging.getLogger("apitist")
         Logging.logger.setLevel(log_level)
 
 
