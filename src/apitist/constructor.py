@@ -86,14 +86,6 @@ class _Converter:
         return cl(obj)
 
 
-class AttrsConverter(_Converter, cattr.Converter):
-    _converter_type = ConverterType.ATTRS
-
-
-class DataclassConverter(_Converter, convclasses.Converter):
-    _converter_type = ConverterType.DATACLASS
-
-
 class NothingDict(dict):
     """
     Default dict for unstructuring
@@ -124,6 +116,16 @@ class MissingDict(dict):
         super().__setitem__(key, value)
 
 
+class AttrsConverter(_Converter, cattr.Converter):
+    _converter_type = ConverterType.ATTRS
+    _dict_factory = NothingDict
+
+
+class DataclassConverter(_Converter, convclasses.Converter):
+    _converter_type = ConverterType.DATACLASS
+    _dict_factory = MissingDict
+
+
 def Converter(converter_type: ConverterType = ConverterType.ATTRS):
     if converter_type == ConverterType.ATTRS:
         return AttrsConverter()
@@ -132,9 +134,7 @@ def Converter(converter_type: ConverterType = ConverterType.ATTRS):
 
 
 converter = Converter()
-converter.set_dict_factory(NothingDict)
 converter.register_additional_hooks()
 
 convclass = Converter(ConverterType.DATACLASS)
-convclass.set_dict_factory(MissingDict)
 convclass.register_additional_hooks()
