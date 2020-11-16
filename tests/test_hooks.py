@@ -1,3 +1,4 @@
+import datetime
 import json
 import logging
 import typing
@@ -7,6 +8,14 @@ import pytest
 
 import attr
 
+from apitist import (
+    AttrsConverter,
+    DataclassConverter,
+    request_attrs_converter_hook,
+    request_dataclass_converter_hook,
+    response_attrs_converter_hook,
+    response_dataclass_converter_hook,
+)
 from apitist.hooks import (
     PreparedRequestHook,
     PrepRequestDebugLoggingHook,
@@ -171,3 +180,67 @@ class TestHooks:
         res = session.post("http://httpbin.org/post")
         with pytest.raises(TypeError):
             res.structure(ExampleDataclass)
+
+    def test_custom_converter_hooks_attrs(self, session):
+        @attr.s
+        class Data:
+            test: datetime.datetime = attr.ib()
+
+        @attr.s
+        class ResData:
+            json: Data = attr.ib()
+
+        conv = AttrsConverter()
+        req_hook = request_attrs_converter_hook(conv)
+        res_hook = response_attrs_converter_hook(conv)
+        session.add_hook(req_hook)
+        session.add_hook(res_hook)
+        with pytest.raises(TypeError):
+            session.post(
+                "http://httpbin.org/post", data=Data(datetime.datetime.now())
+            )
+        with pytest.raises(ValueError):
+            session.post(
+                "http://httpbin.org/post", json={"test": "22:13:44"}
+            ).structure(ResData)
+        conv.register_hooks(
+            datetime.datetime,
+            lambda obj, _: datetime.datetime.strptime(obj, "%H:%M:%S"),
+            lambda obj: obj.strftime("%H:%M:%S"),
+        )
+        res = session.post(
+            "http://httpbin.org/post", data=Data(datetime.datetime.now())
+        ).structure(ResData)
+        assert res.data.json.test
+
+    def test_custom_converter_hooks_dataclasses(self, session):
+        @dataclass
+        class Data:
+            test: datetime.datetime
+
+        @dataclass
+        class ResData:
+            json: Data
+
+        conv = DataclassConverter()
+        req_hook = request_dataclass_converter_hook(conv)
+        res_hook = response_dataclass_converter_hook(conv)
+        session.add_hook(req_hook)
+        session.add_hook(res_hook)
+        with pytest.raises(TypeError):
+            session.post(
+                "http://httpbin.org/post", data=Data(datetime.datetime.now())
+            )
+        with pytest.raises(ValueError):
+            session.post(
+                "http://httpbin.org/post", json={"test": "22:13:44"}
+            ).structure(ResData)
+        conv.register_hooks(
+            datetime.datetime,
+            lambda obj, _: datetime.datetime.strptime(obj, "%H:%M:%S"),
+            lambda obj: obj.strftime("%H:%M:%S"),
+        )
+        res = session.post(
+            "http://httpbin.org/post", data=Data(datetime.datetime.now())
+        ).structure(ResData)
+        assert res.data.json.test

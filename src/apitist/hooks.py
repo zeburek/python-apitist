@@ -67,22 +67,34 @@ class ResponseInfoLoggingHook(ResponseHook):
         return response
 
 
-class RequestAttrsConverterHook(RequestHook):
-    def run(self, request: Request) -> Request:
-        if is_attrs_class(request.data):
-            request.json = converter.unstructure(request.data)
-            request.data = None
-        return request
+def request_attrs_converter_hook(conv) -> Type[RequestHook]:
+    class _RequestHook(RequestHook):
+        def run(self, request: Request) -> Request:
+            if is_attrs_class(request.data):
+                request.json = conv.unstructure(request.data)
+                request.data = None
+            return request
+
+    return _RequestHook
 
 
-class RequestDataclassConverterHook(RequestHook):
-    def run(self, request: Request) -> Request:
-        if dataclasses.is_dataclass(request.data):
-            request.json = convclass.unstructure(request.data)
-            request.data = None
-        return request
+def request_dataclass_converter_hook(conv) -> Type[RequestHook]:
+    class _RequestHook(RequestHook):
+        def run(self, request: Request) -> Request:
+            if dataclasses.is_dataclass(request.data):
+                request.json = conv.unstructure(request.data)
+                request.data = None
+            return request
+
+    return _RequestHook
 
 
+RequestAttrsConverterHook: Type[RequestHook] = request_attrs_converter_hook(
+    converter
+)
+RequestDataclassConverterHook: Type[
+    RequestHook
+] = request_dataclass_converter_hook(convclass)
 RequestConverterHook = RequestAttrsConverterHook
 
 
@@ -96,36 +108,48 @@ def throw_response_missmatch(fields, res: Response, exp):
     )
 
 
-class ResponseAttrsConverterHook(ResponseHook):
-    def run(self, response: Response) -> Response:
-        def func(self, t: Type) -> Response:
-            try:
-                self.data = converter.structure(self.json(), t)
-            except TypeError as e:
-                if is_attrs_class(t):
-                    fields = attr.fields_dict(t)
-                    throw_response_missmatch(fields, self, e)
-                raise e
-            return self
+def response_attrs_converter_hook(conv) -> Type[ResponseHook]:
+    class _ResponseHook(ResponseHook):
+        def run(self, response: Response) -> Response:
+            def func(self, t: Type) -> Response:
+                try:
+                    self.data = conv.structure(self.json(), t)
+                except TypeError as e:
+                    if is_attrs_class(t):
+                        fields = attr.fields_dict(t)
+                        throw_response_missmatch(fields, self, e)
+                    raise e
+                return self
 
-        response.structure = types.MethodType(func, response)
-        return response
+            response.structure = types.MethodType(func, response)
+            return response
 
-
-class ResponseDataclassConverterHook(ResponseHook):
-    def run(self, response: Response) -> Response:
-        def func(self, t: Type) -> Response:
-            try:
-                self.data = convclass.structure(self.json(), t)
-            except TypeError as e:
-                if dataclasses.is_dataclass(t):
-                    fields = dataclasses.fields(t)
-                    throw_response_missmatch(fields, self, e)
-                raise e
-            return self
-
-        response.structure = types.MethodType(func, response)
-        return response
+    return _ResponseHook
 
 
+def response_dataclass_converter_hook(conv) -> Type[ResponseHook]:
+    class _ResponseHook(ResponseHook):
+        def run(self, response: Response) -> Response:
+            def func(self, t: Type) -> Response:
+                try:
+                    self.data = conv.structure(self.json(), t)
+                except TypeError as e:
+                    if dataclasses.is_dataclass(t):
+                        fields = dataclasses.fields(t)
+                        throw_response_missmatch(fields, self, e)
+                    raise e
+                return self
+
+            response.structure = types.MethodType(func, response)
+            return response
+
+    return _ResponseHook
+
+
+ResponseAttrsConverterHook: Type[ResponseHook] = response_attrs_converter_hook(
+    converter
+)
+ResponseDataclassConverterHook: Type[
+    ResponseHook
+] = response_dataclass_converter_hook(convclass)
 ResponseConverterHook = ResponseAttrsConverterHook
