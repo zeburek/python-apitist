@@ -1,6 +1,6 @@
 import dataclasses
 import types
-from typing import Type
+from typing import List, Type
 
 import attr
 from requests import PreparedRequest, Request, Response
@@ -64,6 +64,14 @@ class ResponseInfoLoggingHook(ResponseHook):
 
     def run(self, response: Response) -> Response:
         Logging.logger.info(self.formatter.format(res=response))
+        return response
+
+
+class ResponseMonitoringHook(ResponseHook):
+    _responses: List[Response] = []
+
+    def run(self, response: Response) -> Response:
+        ResponseMonitoringHook._responses.append(response)
         return response
 
 
