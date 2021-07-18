@@ -4,11 +4,10 @@ from apitist.requests import Session
 
 
 def request(method, url, **deco_kwargs):
-    print(url)
-
     def _decorate(function):
         @functools.wraps(function)
         def wrapped_function(*args, **kwargs):
+            result_url = url.format(*args[1:], **kwargs)
             if len(args) < 1 or function.__repr__ in dir(args[0]):
                 raise Exception(
                     "You should decorate only methods of the class"
@@ -25,7 +24,7 @@ def request(method, url, **deco_kwargs):
                 )
             return s.request(
                 method,
-                url,
+                result_url,
                 **(modificator if isinstance(modificator, dict) else {}),
                 **deco_kwargs,
             )

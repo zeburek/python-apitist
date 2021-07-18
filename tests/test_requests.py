@@ -15,6 +15,14 @@ class ExampleClient:
     def get(self):
         ...
 
+    @deco.get("/get/{}")
+    def get_id(self, id):
+        ...
+
+    @deco.get("/get/{}?well={well}")
+    def get_id_and_query(self, id, well=None):
+        ...
+
     @deco.delete("/delete")
     def delete(self):
         ...
@@ -126,3 +134,21 @@ class TestRequests:
             client.patch_with_headers()
             req = m.request_history[0]
             assert req.headers["Accept-type"] == "text/plain"
+
+    def test_formatting(self):
+        host = "https://httpbin.org"
+        client = ExampleClient(host)
+
+        with requests_mock.Mocker() as m:
+            m.register_uri("GET", f"{host}/get/1", text="mocked")
+            res = client.get_id(1)
+            assert res.text == "mocked"
+
+    def test_formatting_2(self):
+        host = "https://httpbin.org"
+        client = ExampleClient(host)
+
+        with requests_mock.Mocker() as m:
+            m.register_uri("GET", f"{host}/get/1?well=known", text="mocked")
+            res = client.get_id_and_query(1, well="known")
+            assert res.text == "mocked"
