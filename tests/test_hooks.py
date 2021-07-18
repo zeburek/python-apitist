@@ -193,8 +193,7 @@ class TestHooks:
         conv = AttrsConverter()
         req_hook = request_attrs_converter_hook(conv)
         res_hook = response_attrs_converter_hook(conv)
-        session.add_hook(req_hook)
-        session.add_hook(res_hook)
+        session.add_hooks(req_hook, res_hook)
         with pytest.raises(TypeError):
             session.post(
                 "http://httpbin.org/post", data=Data(datetime.datetime.now())

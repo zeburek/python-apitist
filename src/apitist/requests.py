@@ -1,6 +1,7 @@
 import inspect
 from abc import ABC
 from typing import List, Type, TypeVar, Union
+from urllib.parse import urlparse
 
 from requests import PreparedRequest, Request, Response
 from requests import Session as OldSession
@@ -62,11 +63,12 @@ class ApitistResponse(Response):
 
 
 class Session(OldSession):
-    def __init__(self):
+    def __init__(self, base_url: str = None):
         super().__init__()
         self.request_hooks = []
         self.prep_request_hooks = []
         self.response_hooks = []
+        self.base_url = base_url
 
     def _add_hook(
         self,
@@ -86,6 +88,13 @@ class Session(OldSession):
     def add_response_hook(self, hook: Type[ResponseHook]):
         Logging.logger.debug("Adding new response hook")
         self._add_hook(hook, self.response_hooks)
+
+    def add_hooks(
+        self,
+        *hooks: Type[Union[RequestHook, PreparedRequestHook, ResponseHook]],
+    ):
+        for hook in hooks:
+            self.add_hook(hook)
 
     def add_hook(
         self, hook: Type[Union[RequestHook, PreparedRequestHook, ResponseHook]]
@@ -165,9 +174,14 @@ class Session(OldSession):
         :rtype: requests.Response
         """
         # Create the Request.
+        parsed_url = urlparse(url)
+        if parsed_url.scheme and parsed_url.hostname:
+            result_url = url
+        else:
+            result_url = "/".join([self.base_url.rstrip("/"), url.lstrip("/")])
         req = Request(
             method=method.upper(),
-            url=url,
+            url=result_url,
             headers=headers,
             files=files,
             data=data or {},
@@ -196,10 +210,10 @@ class Session(OldSession):
         return resp
 
 
-def session():
+def session(base_url: str = None):
     """
     Returns a :class:`Session` for context-management.
 
     :rtype: Session
     """
-    return Session()
+    return Session(base_url=base_url)
