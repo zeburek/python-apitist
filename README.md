@@ -23,6 +23,77 @@ If you want to use predefined random types please install additional requirement
 pip install -e apitist[random]
 ```
 
+## Session and client creation
+
+Session can take `base_url` parameter which will be used to prepend before requesting path.
+
+```python
+from apitist.requests import session
+
+session = session("https://httpbin.org/v1")
+session.get("/get") # Here request will be made to `https://httpbin.org/v1/get`
+```
+
+You can safely pass `path` and `base_url` with leading/forwarding slash:
+```python
+from apitist.requests import session
+
+session("https://httpbin.org/v1").get("/get")
+session("https://httpbin.org/v1/").get("/get")
+session("https://httpbin.org/v1/").get("get")
+session("https://httpbin.org/v1").get("get")
+```
+
+In all examples above requests would be made to `https://httpbin.org/v1/get`.
+
+### Request decorators
+
+Apitist offers all default requests types as a class method decorator, but there are some
+requirements for that:
+
+- Class, where you use decorators, should contain session parameter, with `Session` object
+- Function, which is decorated, must return `None` or `dict` with parameters, that will be passed
+to `request` function of `Session` object, like: `headers`, `data`, `json` and so on.
+- You can use format placeholders in decorators `url` parameter, but you should remember that
+parameters from method will be passed to `format` method AS IS - args to args, kwargs to kwargs.
+As a result this code won't work:
+  ```python
+  class ExampleClient:
+      ...
+
+      @delete("/users/{id}?method={method}")
+      def delete_user(self, id, method): ...
+  ```
+
+Example client class:
+
+```python
+from apitist import session
+from apitist.decorators import get, post, put, delete
+
+
+class ExampleClient:
+    session = session("http://example.com/v1")
+
+    @get("/users")
+    def get_user(self): ...
+
+    @get("/users/{}")
+    def get_user(self, id): ...
+
+    @post("/users")
+    def create_user(self, data):
+        return {"json": data}
+
+    @put("/users/{}")
+    def update_user(self, id, data):
+        return {"json": data}
+
+    @delete("/users/{}?method={method}")
+    def delete_user(self, id, method="hide"): ...
+
+```
+
 ## Default hooks
 
   - RequestDebugLoggingHook - logs request content with level DEBUG
