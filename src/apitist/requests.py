@@ -1,10 +1,11 @@
 import inspect
 from abc import ABC
-from typing import List, Type, TypeVar, Union
+from typing import List, Set, Type, TypeVar, Union
 from urllib.parse import urlparse
 
 from requests import PreparedRequest, Request, Response
 from requests import Session as OldSession
+from requests.cookies import cookiejar_from_dict, merge_cookies
 
 from apitist.logging import Logging
 
@@ -208,6 +209,52 @@ class Session(OldSession):
         resp = self._run_hooks(self.response_hooks, resp)
 
         return resp
+
+
+class SharedSession:
+    """
+    Class to synchronize cookies between different sessions.
+    On each completed response cookies are merged between
+    all registered session objects
+    """
+
+    def __init__(self, *sessions: OldSession):
+        self._shared_state = {"cookies": cookiejar_from_dict({})}
+        self._sessions: Set[OldSession] = set()
+
+        class SharedSessionHook(ResponseHook):
+            def run(cls, response: Response) -> Response:
+                nonlocal self
+                self.synchronize_sessions()
+                return response
+
+        self._hook = SharedSessionHook
+        self.add_sessions(*sessions)
+
+    def add_sessions(self, *sessions: OldSession):
+        self._sessions.update(sessions)
+        self.validate_sessions()
+        self._register_hooks()
+
+    def validate_sessions(self):
+        for s in self._sessions:
+            if not isinstance(s, OldSession):
+                raise ValueError(
+                    "Session should be an instance of `Session` "
+                    "from apitist package"
+                )
+
+    def synchronize_sessions(self):
+        for s in self._sessions:
+            self._shared_state["cookies"] = merge_cookies(
+                self._shared_state["cookies"], s.cookies
+            )
+            s.cookies = self._shared_state["cookies"]
+
+    def _register_hooks(self):
+        for s in self._sessions:
+            if self._hook not in s.response_hooks:
+                s.add_hook(self._hook)
 
 
 def session(base_url: str = None):

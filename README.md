@@ -94,6 +94,28 @@ class ExampleClient:
 
 ```
 
+## Shared Session
+
+Shared Session class can be used to share cookies between different sessions.
+
+```python
+from apitist import session, SharedSession
+
+
+s1 = session("https://google.com")
+s2 = session("https://yandex.ru")
+
+ss = SharedSession(s1, s2)
+
+s2.get("/?q=2113")
+
+assert s1.cookies == s2.cookies
+
+s1.get("/?q=124")
+
+assert s1.cookies == s2.cookies
+```
+
 ## Default hooks
 
   - RequestDebugLoggingHook - logs request content with level DEBUG

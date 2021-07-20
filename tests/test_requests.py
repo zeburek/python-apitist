@@ -5,6 +5,7 @@ from requests_mock import NoMockAddress
 
 from apitist import decorators as deco
 from apitist import session
+from apitist.requests import SharedSession
 
 
 class ExampleClient:
@@ -152,3 +153,18 @@ class TestRequests:
             m.register_uri("GET", f"{host}/get/1?well=known", text="mocked")
             res = client.get_id_and_query(1, well="known")
             assert res.text == "mocked"
+
+    def test_shared_state(self):
+        s1 = session("https://google.com")
+        s2 = session("https://yandex.ru")
+
+        ss = SharedSession(s1)
+        ss.add_sessions(s2)
+
+        s2.get("/?q=2113")
+
+        assert s1.cookies == s2.cookies
+
+        s1.get("/?q=124")
+
+        assert s1.cookies == s2.cookies

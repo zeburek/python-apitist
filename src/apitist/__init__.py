@@ -31,7 +31,7 @@ from .hooks import (
     response_dataclass_converter_hook,
 )
 from .random import Randomer
-from .requests import session
+from .requests import Session, SharedSession, session
 
 __all__ = [
     "__version__",
@@ -59,6 +59,8 @@ __all__ = [
     "ResponseInfoLoggingHook",
     "Randomer",
     "session",
+    "Session",
+    "SharedSession",
     "request_attrs_converter_hook",
     "request_dataclass_converter_hook",
     "response_attrs_converter_hook",
