@@ -1,6 +1,9 @@
 import functools
+from dataclasses import is_dataclass
 
+from apitist import convclass, converter
 from apitist.requests import Session
+from apitist.utils import is_attrs_class
 
 
 def request(method, url, **deco_kwargs):
@@ -60,3 +63,17 @@ def patch(url, **kwargs):
 
 def delete(url, **kwargs):
     return request("DELETE", url, **kwargs)
+
+
+def transform(cls):
+    def to_type(self, type):
+        if is_attrs_class(self):
+            data = converter.unstructure(self)
+            return converter.structure(data, type)
+        elif is_dataclass(self):
+            data = convclass.unstructure(self)
+            return convclass.structure(data, type)
+        raise TypeError("Object should be attrs or dataclass type")
+
+    setattr(cls, "to_type", to_type)
+    return cls

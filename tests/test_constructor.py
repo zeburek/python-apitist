@@ -14,6 +14,7 @@ from apitist.constructor import (
     _subclass,
     _unstructure_date_time,
 )
+from apitist.decorators import transform
 
 
 class TypeStr(str):
@@ -121,3 +122,75 @@ class TestConstructor:
     )
     def test_structure_call(self, converter, value, result):
         assert converter._structure_call(value, str) == result
+
+
+class TestToType:
+    def test_attrs(self):
+        @transform
+        @attr.s
+        class Type1:
+            field1: str = attr.ib()
+            field2: int = attr.ib()
+            field3: List[str] = attr.ib()
+
+        @transform
+        @attr.s
+        class Type2:
+            field2: int = attr.ib()
+            field3: List[str] = attr.ib()
+
+        @transform
+        @attr.s
+        class Type3:
+            field1: str = attr.ib()
+            field2: Type1 = attr.ib()
+            field3: List[str] = attr.ib()
+
+        @transform
+        @attr.s
+        class Type4:
+            field2: Type2 = attr.ib()
+            field3: List[str] = attr.ib()
+
+        t1 = Type1("one", 2, ["three"])
+        t2 = Type2(2, ["three"])
+        t3 = Type3("one", t1, ["three"])
+        t4 = Type4(t2, ["three"])
+
+        assert t1.to_type(Type2) == t2
+        assert t3.to_type(Type4) == t4
+
+    def test_dataclass(self):
+        @transform
+        @dataclass
+        class Type1:
+            field1: str
+            field2: int
+            field3: List[str]
+
+        @transform
+        @dataclass
+        class Type2:
+            field2: int
+            field3: List[str]
+
+        @transform
+        @dataclass
+        class Type3:
+            field1: str
+            field2: Type1
+            field3: List[str]
+
+        @transform
+        @dataclass
+        class Type4:
+            field2: Type2
+            field3: List[str]
+
+        t1 = Type1("one", 2, ["three"])
+        t2 = Type2(2, ["three"])
+        t3 = Type3("one", t1, ["three"])
+        t4 = Type4(t2, ["three"])
+
+        assert t1.to_type(Type2) == t2
+        assert t3.to_type(Type4) == t4
