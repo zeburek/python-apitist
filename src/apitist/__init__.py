@@ -25,10 +25,8 @@ from .hooks import (
     ResponseDebugLoggingHook,
     ResponseHook,
     ResponseInfoLoggingHook,
-    request_attrs_converter_hook,
-    request_dataclass_converter_hook,
-    response_attrs_converter_hook,
-    response_dataclass_converter_hook,
+    request_converter_hook,
+    response_converter_hook,
 )
 from .random import Randomer
 from .requests import Session, SharedSession, session
@@ -61,10 +59,8 @@ __all__ = [
     "session",
     "Session",
     "SharedSession",
-    "request_attrs_converter_hook",
-    "request_dataclass_converter_hook",
-    "response_attrs_converter_hook",
-    "response_dataclass_converter_hook",
+    "request_converter_hook",
+    "response_converter_hook",
 ]
 
 try:

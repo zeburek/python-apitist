@@ -11,10 +11,8 @@ import attr
 from apitist import (
     AttrsConverter,
     DataclassConverter,
-    request_attrs_converter_hook,
-    request_dataclass_converter_hook,
-    response_attrs_converter_hook,
-    response_dataclass_converter_hook,
+    request_converter_hook,
+    response_converter_hook,
 )
 from apitist.hooks import (
     PreparedRequestHook,
@@ -51,6 +49,13 @@ class ExampleResponse:
     url: str = attr.ib()
 
 
+@attr.s
+class ExampleError:
+    status: str = attr.ib()
+    code: int = attr.ib()
+    total: int = attr.ib()
+
+
 @dataclass
 class ExampleDataclass:
     test: str
@@ -66,6 +71,13 @@ class ExampleResponseDataclass:
     json: typing.Any
     origin: str
     url: str
+
+
+@dataclass
+class ExampleErrorDataclass:
+    status: str
+    code: int
+    total: int
 
 
 class TestHooks:
@@ -191,14 +203,14 @@ class TestHooks:
             json: Data = attr.ib()
 
         conv = AttrsConverter()
-        req_hook = request_attrs_converter_hook(conv)
-        res_hook = response_attrs_converter_hook(conv)
+        req_hook = request_converter_hook(conv)
+        res_hook = response_converter_hook(conv)
         session.add_hooks(req_hook, res_hook)
         with pytest.raises(TypeError):
             session.post(
                 "http://httpbin.org/post", data=Data(datetime.datetime.now())
             )
-        with pytest.raises(ValueError):
+        with pytest.raises(TypeError):
             session.post(
                 "http://httpbin.org/post", json={"test": "22:13:44"}
             ).structure(ResData)
@@ -222,15 +234,15 @@ class TestHooks:
             json: Data
 
         conv = DataclassConverter()
-        req_hook = request_dataclass_converter_hook(conv)
-        res_hook = response_dataclass_converter_hook(conv)
+        req_hook = request_converter_hook(conv)
+        res_hook = response_converter_hook(conv)
         session.add_hook(req_hook)
         session.add_hook(res_hook)
         with pytest.raises(TypeError):
             session.post(
                 "http://httpbin.org/post", data=Data(datetime.datetime.now())
             )
-        with pytest.raises(ValueError):
+        with pytest.raises(TypeError):
             session.post(
                 "http://httpbin.org/post", json={"test": "22:13:44"}
             ).structure(ResData)
@@ -243,3 +255,98 @@ class TestHooks:
             "http://httpbin.org/post", data=Data(datetime.datetime.now())
         ).structure(ResData)
         assert res.data.json.test
+
+    # Automatic structure/unstructure
+
+    def test_response_converter_no_structure_func(self, session):
+        res = session.post(
+            "http://httpbin.org/post",
+            structure_type=ExampleResponseDataclass,
+            structure_err_type=ExampleErrorDataclass,
+        )
+        assert getattr(res, "data", None) is None
+
+    def test_response_converter_correct_dataclass_type_auto(self, session):
+        session.add_hook(ResponseDataclassConverterHook)
+        res = session.post(
+            "http://httpbin.org/post", structure_type=ExampleResponseDataclass
+        )
+        assert isinstance(res.data, ExampleResponseDataclass)
+
+    def test_response_converter_correct_dataclass_type_auto_err(self, session):
+        session.add_hook(ResponseDataclassConverterHook)
+        res = session.get(
+            "https://fakerapi.it/api/v1/custom",
+            structure_type=ExampleResponseDataclass,
+            structure_err_type=ExampleErrorDataclass,
+        )
+        assert isinstance(res.data, ExampleErrorDataclass)
+
+    def test_response_converter_correct_dataclass_type_auto_default_err(
+        self, session
+    ):
+        session.add_hook(ResponseDataclassConverterHook)
+        session.structure_err_type = ExampleErrorDataclass
+        res = session.get(
+            "https://fakerapi.it/api/v1/custom",
+            structure_type=ExampleResponseDataclass,
+        )
+        assert isinstance(res.data, ExampleErrorDataclass)
+
+    def test_response_converter_correct_dataclass_type_auto_no_err(
+        self, session
+    ):
+        session.add_hook(ResponseDataclassConverterHook)
+        res = session.get(
+            "https://fakerapi.it/api/v1/custom",
+            structure_type=ExampleResponseDataclass,
+        )
+        assert getattr(res, "data", None) is None
+
+    def test_response_converter_incorrect_dataclass_type_auto(self, session):
+        session.add_hook(ResponseDataclassConverterHook)
+        with pytest.raises(TypeError):
+            session.post(
+                "http://httpbin.org/post", structure_type=ExampleDataclass
+            )
+
+    def test_response_converter_correct_type_auto(self, session):
+        session.add_hook(ResponseAttrsConverterHook)
+        res = session.post(
+            "http://httpbin.org/post", structure_type=ExampleResponse
+        )
+        assert isinstance(res.data, ExampleResponse)
+
+    def test_response_converter_correct_type_auto_err(self, session):
+        session.add_hook(ResponseAttrsConverterHook)
+        res = session.get(
+            "https://fakerapi.it/api/v1/custom",
+            structure_type=ExampleResponse,
+            structure_err_type=ExampleError,
+        )
+        assert isinstance(res.data, ExampleError)
+
+    def test_response_converter_correct_type_auto_default_err(self, session):
+        session.add_hook(ResponseAttrsConverterHook)
+        session.structure_err_type = ExampleError
+        res = session.get(
+            "https://fakerapi.it/api/v1/custom", structure_type=ExampleResponse
+        )
+        assert isinstance(res.data, ExampleError)
+
+    def test_response_converter_correct_type_auto_no_err(self, session):
+        session.add_hook(ResponseAttrsConverterHook)
+        res = session.get(
+            "https://fakerapi.it/api/v1/custom", structure_type=ExampleResponse
+        )
+        assert getattr(res, "data", None) is None
+
+    def test_response_converter_incorrect_type_auto(self, session):
+        session.add_hook(ResponseAttrsConverterHook)
+        with pytest.raises(TypeError):
+            session.post("http://httpbin.org/post", structure_type=ExampleData)
+
+    def test_response_incorrect_type(self, session):
+        session.add_hook(ResponseAttrsConverterHook)
+        with pytest.raises((ValueError, TypeError)):
+            session.post("http://httpbin.org/post", structure_type=Session)

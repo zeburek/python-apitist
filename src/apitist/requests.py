@@ -3,7 +3,7 @@ from abc import ABC
 from typing import List, Set, Type, TypeVar, Union
 from urllib.parse import urlparse
 
-from requests import PreparedRequest, Request, Response
+from requests import HTTPError, PreparedRequest, Request, Response
 from requests import Session as OldSession
 from requests.cookies import cookiejar_from_dict, merge_cookies
 
@@ -25,6 +25,11 @@ class PreparedRequestHook(SessionHook):
 
 
 class ResponseHook(SessionHook):
+    def run(self, response: Response) -> Response:
+        ...
+
+
+class ResponseCoverterHook(SessionHook):
     def run(self, response: Response) -> Response:
         ...
 
@@ -63,13 +68,19 @@ class ApitistResponse(Response):
         ...
 
 
+T = TypeVar("T")
+
+
 class Session(OldSession):
-    def __init__(self, base_url: str = None):
+    def __init__(
+        self, base_url: str = None, structure_err_type: Type[T] = None
+    ):
         super().__init__()
         self.request_hooks = []
         self.prep_request_hooks = []
         self.response_hooks = []
         self.base_url = base_url
+        self.structure_err_type = structure_err_type
 
     def _add_hook(
         self,
@@ -118,6 +129,29 @@ class Session(OldSession):
             data = hook().run(data)
         return data
 
+    def _structure_response(
+        self, response: Response, structure_type, structure_err_type
+    ) -> Union[ApitistResponse, Response]:
+        if not getattr(response, "structure", None):
+            return response
+
+        try:
+            json = response.json()
+        except ValueError:
+            json = None
+
+        if not json:
+            return response
+
+        try:
+            response.raise_for_status()
+            if structure_type is not None:
+                response = response.structure(structure_type)
+        except HTTPError:
+            if structure_err_type is not None:
+                response = response.structure(structure_err_type)
+        return response
+
     def request(
         self,
         method,
@@ -136,6 +170,8 @@ class Session(OldSession):
         verify=None,
         cert=None,
         json=None,
+        structure_type=None,
+        structure_err_type=None,
     ) -> ApitistResponse:
         """Constructs a :class:`Request <Request>`, prepares it and sends it.
         Returns :class:`Response <Response>` object.
@@ -172,6 +208,10 @@ class Session(OldSession):
             Defaults to ``True``.
         :param cert: (optional) if String, path to ssl client cert file (.pem).
             If Tuple, ('cert', 'key') pair.
+        :param structure_type: (optional) Type which would be used to structure
+            json response
+        :param structure_err_type: (optional) Type which would be used to
+            structure json response, if response status is not 2xx
         :rtype: requests.Response
         """
         # Create the Request.
@@ -207,6 +247,10 @@ class Session(OldSession):
         send_kwargs.update(settings)
         resp = ApitistResponse(self.send(prep, **send_kwargs))
         resp = self._run_hooks(self.response_hooks, resp)
+
+        self._structure_response(
+            resp, structure_type, structure_err_type or self.structure_err_type
+        )
 
         return resp
 

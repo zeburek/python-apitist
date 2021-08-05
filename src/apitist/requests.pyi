@@ -39,12 +39,14 @@ _Data = Union[None, Text, bytes, MutableMapping[str, Any], MutableMapping[Text, 
 _Hook = Callable[[ApitistResponse], Any]
 _Hooks = MutableMapping[Text, List[_Hook]]
 _HooksInput = MutableMapping[Text, Union[Iterable[_Hook], _Hook]]
+T = TypeVar("T")
 
 
 class Session(OldSession):
     request_hooks: List[RequestHook]
     prep_request_hooks: List[PreparedRequestHook]
     response_hooks: List[ResponseHook]
+    structure_err_type: Type[T]
     base_url: str
     def __init__(self, base_url: str = None): ...
     def add_request_hook(self, hook: Type[RequestHook]): ...

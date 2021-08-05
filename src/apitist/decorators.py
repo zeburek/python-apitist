@@ -25,11 +25,16 @@ def request(method, url, **deco_kwargs):
                     "Modificator should be a dict of request parameters, not:",
                     modificator,
                 )
+            modificator = modificator if isinstance(modificator, dict) else {}
             return s.request(
                 method,
                 result_url,
-                **(modificator if isinstance(modificator, dict) else {}),
-                **deco_kwargs,
+                **modificator,
+                **{
+                    k: v
+                    for k, v in deco_kwargs.items()
+                    if k not in modificator
+                },
             )
 
         return wrapped_function
