@@ -2,7 +2,7 @@ import pytest
 
 import requests_mock
 from requests_mock import NoMockAddress
-from tests.test_hooks import ExampleResponseDataclass
+from test_hooks import ExampleResponseDataclass
 
 from apitist import ResponseDataclassConverterHook
 from apitist import decorators as deco
