@@ -1,4 +1,5 @@
 import dataclasses
+import logging
 import types
 from typing import Type
 
@@ -12,75 +13,79 @@ from .logging import Logging
 from .requests import PreparedRequestHook, RequestHook, ResponseHook
 
 
-class RequestDebugLoggingHook(RequestHook):
-    formatter = "Request {req.method} {req.url} {req.data}"
+class BaseLogging:
+    formatter = None
+    logging_level = logging.NOTSET
+
+    def get_formatter(self, data):
+        formatter = self.formatter
+        if getattr(data, "name"):
+            formatter = self.formatter.replace("data.url", "data.name", 1)
+        return formatter
+
+    def log(self, data):
+        Logging.logger.log(
+            self.logging_level, self.get_formatter(data).format(data=data)
+        )
+
+
+class RequestDebugLoggingHook(RequestHook, BaseLogging):
+    formatter = "Request {data.method} {data.url} {data.data}"
+    logging_level = logging.DEBUG
 
     def run(self, request: Request) -> Request:
-        formatter = self.formatter
-        if request.name:
-            formatter = self.formatter.replace("req.url", "req.name", 1)
-        Logging.logger.debug(formatter.format(req=request))
+        self.log(request)
         return request
 
 
-class RequestInfoLoggingHook(RequestHook):
-    formatter = "Request {req.method} {req.url} {req.data}"
+class RequestInfoLoggingHook(RequestHook, BaseLogging):
+    formatter = "Request {data.method} {data.url} {data.data}"
+    logging_level = logging.INFO
 
     def run(self, request: Request) -> Request:
-        formatter = self.formatter
-        if request.name:
-            formatter = self.formatter.replace("req.url", "req.name", 1)
-        Logging.logger.info(formatter.format(req=request))
+        self.log(request)
         return request
 
 
-class PrepRequestDebugLoggingHook(PreparedRequestHook):
-    formatter = "Request {req.method} {req.url} {req.body}"
+class PrepRequestDebugLoggingHook(PreparedRequestHook, BaseLogging):
+    formatter = "Request {data.method} {data.url} {data.body}"
+    logging_level = logging.DEBUG
 
     def run(self, request: PreparedRequest) -> PreparedRequest:
-        formatter = self.formatter
-        if request.name:
-            formatter = self.formatter.replace("req.url", "req.name", 1)
-        Logging.logger.debug(formatter.format(req=request))
+        self.log(request)
         return request
 
 
-class PrepRequestInfoLoggingHook(PreparedRequestHook):
-    formatter = "Request {req.method} {req.url} {req.body}"
+class PrepRequestInfoLoggingHook(PreparedRequestHook, BaseLogging):
+    formatter = "Request {data.method} {data.url} {data.body}"
+    logging_level = logging.INFO
 
     def run(self, request: PreparedRequest) -> PreparedRequest:
-        formatter = self.formatter
-        if request.name:
-            formatter = self.formatter.replace("req.url", "req.name", 1)
-        Logging.logger.info(formatter.format(req=request))
+        self.log(request)
         return request
 
 
-class ResponseDebugLoggingHook(ResponseHook):
+class ResponseDebugLoggingHook(ResponseHook, BaseLogging):
     formatter = (
-        "Response {res.status_code} {res.request.method} "
-        "{res.url} {res.content}"
+        "Response {data.status_code} {data.request.method} "
+        "{data.url} {data.content}"
     )
+    logging_level = logging.DEBUG
 
     def run(self, response: Response) -> Response:
-        formatter = self.formatter
-        if response.name:
-            formatter = self.formatter.replace("res.url", "res.name", 1)
-        Logging.logger.debug(formatter.format(res=response))
+        self.log(response)
         return response
 
 
-class ResponseInfoLoggingHook(ResponseHook):
+class ResponseInfoLoggingHook(ResponseHook, BaseLogging):
     formatter = (
-        "Response {res.status_code} {res.request.method} "
-        "{res.url} {res.content}"
+        "Response {data.status_code} {data.request.method} "
+        "{data.url} {data.content}"
     )
+    logging_level = logging.INFO
 
     def run(self, response: Response) -> Response:
-        formatter = self.formatter
-        if response.name:
-            formatter = self.formatter.replace("res.url", "res.name", 1)
-        Logging.logger.info(formatter.format(res=response))
+        self.log(response)
         return response
 
 
