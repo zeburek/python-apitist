@@ -40,6 +40,7 @@ _Hook = Callable[[ApitistResponse], Any]
 _Hooks = MutableMapping[Text, List[_Hook]]
 _HooksInput = MutableMapping[Text, Union[Iterable[_Hook], _Hook]]
 T = TypeVar("T")
+R = TypeVar("R")
 
 
 class Session(OldSession):
@@ -69,6 +70,9 @@ class Session(OldSession):
                 verify: Union[None, bool, Text] = ...,
                 cert: Union[Text, Tuple[Text, Text], None] = ...,
                 json: Optional[Any] = ...,
+                structure_type: Optional[R] = ...,
+                structure_err_type: Optional[T] = ...,
+                name: str = ...,
                 ) -> ApitistResponse: ...
     def get(self, url: Union[Text, bytes], **kwargs) -> ApitistResponse: ...
     def options(self, url: Union[Text, bytes], **kwargs) -> ApitistResponse: ...

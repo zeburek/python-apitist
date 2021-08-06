@@ -128,6 +128,27 @@ class TestHooks:
         assert capture.records[0].levelno == logging.INFO
         assert text in capture.records[0].msg
 
+    @pytest.mark.usefixtures("enable_debug_logging")
+    @pytest.mark.parametrize(
+        "hook",
+        [
+            RequestDebugLoggingHook,
+            PrepRequestDebugLoggingHook,
+            ResponseDebugLoggingHook,
+            RequestInfoLoggingHook,
+            PrepRequestInfoLoggingHook,
+            ResponseInfoLoggingHook,
+        ],
+    )
+    def test_debug_logging_hooks_with_name(self, session, hook, capture):
+        request_name = "HTTPBin get request"
+        request_url = "http://httpbin.org/get"
+        session.add_hook(hook)
+        session.get(request_url, name=request_name)
+        assert len(capture.records) == 2
+        assert request_name in capture.records[1].msg
+        assert f"GET {request_url}" not in capture.records[1].msg
+
     def test_request_converter_attrs_class(self, session):
         session.add_hook(RequestAttrsConverterHook)
         res = session.get("http://httpbin.org/get", data=ExampleData("test"))

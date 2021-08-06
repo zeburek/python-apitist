@@ -172,6 +172,7 @@ class Session(OldSession):
         json=None,
         structure_type=None,
         structure_err_type=None,
+        name=None,
     ) -> ApitistResponse:
         """Constructs a :class:`Request <Request>`, prepares it and sends it.
         Returns :class:`Response <Response>` object.
@@ -212,6 +213,7 @@ class Session(OldSession):
             json response
         :param structure_err_type: (optional) Type which would be used to
             structure json response, if response status is not 2xx
+        :param name: (optional) Human-readable description
         :rtype: requests.Response
         """
         # Create the Request.
@@ -232,8 +234,10 @@ class Session(OldSession):
             cookies=cookies,
             hooks=hooks,
         )
+        setattr(req, "name", name)
         req = self._run_hooks(self.request_hooks, req)
         prep = self.prepare_request(req)
+        setattr(prep, "name", name)
         prep = self._run_hooks(self.prep_request_hooks, prep)
 
         proxies = proxies or {}
@@ -246,6 +250,7 @@ class Session(OldSession):
         send_kwargs = {"timeout": timeout, "allow_redirects": allow_redirects}
         send_kwargs.update(settings)
         resp = ApitistResponse(self.send(prep, **send_kwargs))
+        setattr(resp, "name", name)
         resp = self._run_hooks(self.response_hooks, resp)
 
         self._structure_response(

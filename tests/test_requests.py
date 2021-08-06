@@ -27,6 +27,10 @@ class ExampleClient:
     def get_id_and_query(self, id, well=None):
         ...
 
+    @deco.get("/get?id={}", name="Get name with {id}")
+    def get_with_name(self, id):
+        ...
+
     @deco.delete("/delete")
     def delete(self):
         ...
@@ -180,6 +184,13 @@ class TestRequests:
             structure_type=ExampleResponseDataclass
         )
         assert isinstance(res.data, ExampleResponseDataclass)
+
+    def test_request_name(self):
+        host = "https://httpbin.org"
+        client = ExampleClient(host)
+
+        res = client.get_with_name(1)
+        assert res.request.name == "Get name with {id}"
 
     def test_shared_state(self):
         s1 = session("https://google.com")

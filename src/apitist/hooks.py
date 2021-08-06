@@ -16,7 +16,10 @@ class RequestDebugLoggingHook(RequestHook):
     formatter = "Request {req.method} {req.url} {req.data}"
 
     def run(self, request: Request) -> Request:
-        Logging.logger.debug(self.formatter.format(req=request))
+        formatter = self.formatter
+        if request.name:
+            formatter = self.formatter.replace("req.url", "req.name", 1)
+        Logging.logger.debug(formatter.format(req=request))
         return request
 
 
@@ -24,7 +27,10 @@ class RequestInfoLoggingHook(RequestHook):
     formatter = "Request {req.method} {req.url} {req.data}"
 
     def run(self, request: Request) -> Request:
-        Logging.logger.info(self.formatter.format(req=request))
+        formatter = self.formatter
+        if request.name:
+            formatter = self.formatter.replace("req.url", "req.name", 1)
+        Logging.logger.info(formatter.format(req=request))
         return request
 
 
@@ -32,7 +38,10 @@ class PrepRequestDebugLoggingHook(PreparedRequestHook):
     formatter = "Request {req.method} {req.url} {req.body}"
 
     def run(self, request: PreparedRequest) -> PreparedRequest:
-        Logging.logger.debug(self.formatter.format(req=request))
+        formatter = self.formatter
+        if request.name:
+            formatter = self.formatter.replace("req.url", "req.name", 1)
+        Logging.logger.debug(formatter.format(req=request))
         return request
 
 
@@ -40,8 +49,10 @@ class PrepRequestInfoLoggingHook(PreparedRequestHook):
     formatter = "Request {req.method} {req.url} {req.body}"
 
     def run(self, request: PreparedRequest) -> PreparedRequest:
-
-        Logging.logger.info(self.formatter.format(req=request))
+        formatter = self.formatter
+        if request.name:
+            formatter = self.formatter.replace("req.url", "req.name", 1)
+        Logging.logger.info(formatter.format(req=request))
         return request
 
 
@@ -52,7 +63,10 @@ class ResponseDebugLoggingHook(ResponseHook):
     )
 
     def run(self, response: Response) -> Response:
-        Logging.logger.debug(self.formatter.format(res=response))
+        formatter = self.formatter
+        if response.name:
+            formatter = self.formatter.replace("res.url", "res.name", 1)
+        Logging.logger.debug(formatter.format(res=response))
         return response
 
 
@@ -63,7 +77,10 @@ class ResponseInfoLoggingHook(ResponseHook):
     )
 
     def run(self, response: Response) -> Response:
-        Logging.logger.info(self.formatter.format(res=response))
+        formatter = self.formatter
+        if response.name:
+            formatter = self.formatter.replace("res.url", "res.name", 1)
+        Logging.logger.info(formatter.format(res=response))
         return response
 
 
