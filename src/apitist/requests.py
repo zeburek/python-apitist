@@ -1,4 +1,3 @@
-import inspect
 from abc import ABC
 from typing import List, Set, Type, TypeVar, Union
 from urllib.parse import urlparse
@@ -46,18 +45,17 @@ class ApitistResponse(Response):
     def verify_response(
         self, ok_status: Union[int, List[int]] = 200
     ) -> "ApitistResponse":
-        func = inspect.stack()[2][3]
         if isinstance(ok_status, int):
             ok_status = [ok_status]
         if self.status_code not in ok_status:
             raise ValueError(
-                f"Verified response: function {func} failed: "
+                f"Verified response: function failed: "
                 f"server responded {self.status_code} "
                 f"with data: {self.content}"
             )
         else:
             Logging.logger.info(
-                f"Verified response: function {func} code {self.status_code}"
+                f"Verified response: function code {self.status_code}"
             )
         return self
 
